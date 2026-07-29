@@ -49,7 +49,8 @@
 | 平台 | 文件 | 使用 |
 |---|---|---|
 | Windows | `nearby-share-win32-x64.exe` | 双击运行 |
-| macOS (M1/M2/M3/M4) | `nearby-share-darwin-arm64` | `chmod +x` 后双击。首次运行如被 Gatekeeper 拦截，在"系统设置 → 隐私与安全性"点"仍要打开" |
+| macOS (M1/M2/M3/M4) | `nearby-share-darwin-arm64.dmg` | 双击挂载 → 把 NearbyShare 拖到 Applications → 从启动台或应用文件夹打开。首次运行 Gatekeeper 会提示"无法验证开发者"，到**系统设置 → 隐私与安全性**拉到底点**仍要打开**，再从启动台点一次即可 |
+| macOS（无 GUI 场景） | `nearby-share-darwin-arm64` | 原生二进制，`chmod +x` 后从终端运行 |
 | Linux | `nearby-share-linux-x64` | `chmod +x nearby-share-linux-x64 && ./nearby-share-linux-x64` |
 
 不需要安装 Node.js。
