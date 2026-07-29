@@ -83,13 +83,26 @@ function renderLanUrls(urls) {
   for (const { url, iface } of urls) {
     const row = document.createElement('div');
     row.className = 'lan-url';
-    row.title = iface ? iface : '';
+    row.title = iface || '';
+
     const link = document.createElement('span');
+    link.className = 'lan-url-addr';
     link.textContent = url;
+    row.append(link);
+
+    const label = ifaceLabel(iface);
+    if (label) {
+      const badge = document.createElement('span');
+      badge.className = 'lan-iface';
+      badge.textContent = label;
+      row.append(badge);
+    }
+
     const hint = document.createElement('span');
     hint.className = 'copy-hint';
     hint.textContent = t('popupClickToCopy');
-    row.append(link, hint);
+    row.append(hint);
+
     row.addEventListener('click', () => {
       navigator.clipboard.writeText(url).then(() => {
         row.classList.add('copied');
@@ -102,6 +115,19 @@ function renderLanUrls(urls) {
     });
     box.append(row);
   }
+}
+
+/**
+ * 把系统接口名规范化为一小段人类可读的标签。
+ * 用来提示用户哪个是无线、哪个是有线。
+ */
+function ifaceLabel(name) {
+  if (!name) return '';
+  const s = String(name).toLowerCase();
+  if (/wlan|wi-?fi|wireless|无线/.test(s) || /wlan|wi-?fi|wireless|无线/i.test(name)) return 'Wi-Fi';
+  if (/ethernet|以太网|eth\d/.test(s) || /ethernet|以太网|eth\d/i.test(name)) return t('popupIfaceEthernet');
+  if (/en\d/.test(s)) return t('popupIfaceEthernet');
+  return '';
 }
 
 async function refreshRecent() {
