@@ -49,11 +49,12 @@
 | 平台 | 文件 | 使用 |
 |---|---|---|
 | Windows | `nearby-share-win32-x64.exe` | 双击运行 |
-| macOS (M1/M2/M3) | `nearby-share-darwin-arm64` | `chmod +x` 后双击。首次运行如被 Gatekeeper 拦截，在"系统设置 → 隐私与安全性"点"仍要打开" |
-| macOS Intel | `nearby-share-darwin-x64` | 同上 |
+| macOS (M1/M2/M3/M4) | `nearby-share-darwin-arm64` | `chmod +x` 后双击。首次运行如被 Gatekeeper 拦截，在"系统设置 → 隐私与安全性"点"仍要打开" |
 | Linux | `nearby-share-linux-x64` | `chmod +x nearby-share-linux-x64 && ./nearby-share-linux-x64` |
 
 不需要安装 Node.js。
+
+> **老 Intel Mac 用户**：GitHub 已于 2025 年 12 月下线免费的 macOS Intel runner，CI 无法产出 `darwin-x64` 二进制。请下载源码后跑 `node server/bin.js`（需要装 Node.js）。
 
 **方式 2：用 npm 全局安装（有 Node.js 环境）**
 
