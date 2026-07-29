@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>NearbyShare</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="dot" id="statusDot"></span>
+      <span>NearbyShare</span>
+    </div>
+    <div class="tools">
+      <button id="openPanelBtn" class="ghost" title="打开完整面板">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      </button>
+      <button id="optionsBtn" class="ghost" title="设置">⚙</button>
+    </div>
+  </header>
+
+  <div id="offlineBanner" class="banner offline" hidden>
+    <div class="banner-title">本地服务未启动</div>
+    <div class="banner-msg">扩展需要一个本地服务器程序在你的电脑上运行，才能让其它设备通过 IP 访问。</div>
+    <div class="banner-actions">
+      <button id="downloadBtn" class="primary">下载服务器程序</button>
+      <button id="cmdBtn" class="secondary">复制启动命令</button>
+      <button id="retryBtn" class="secondary">重试连接</button>
+    </div>
+  </div>
+
+  <div id="onlineBanner" class="banner online" hidden>
+    <div class="banner-title" id="onlineTitle">已连接到本地服务</div>
+    <div class="banner-msg" id="onlineUrl">http://localhost:3000</div>
+  </div>
+
+  <section class="composer">
+    <textarea id="text" rows="3" placeholder="输入要发送到局域网的文字…"></textarea>
+    <div class="row">
+      <input type="file" id="file" multiple hidden>
+      <button id="fileBtn" class="secondary">📎 添加文件</button>
+      <button id="sendBtn" class="primary" disabled>发送</button>
+    </div>
+    <div id="uploadStatus" class="status"></div>
+  </section>
+
+  <section class="quick">
+    <div class="quick-title">快捷操作</div>
+    <button id="sendPageBtn" class="chip">发送当前页面</button>
+    <button id="sendSelBtn" class="chip">发送选中文字</button>
+  </section>
+
+  <section class="recent">
+    <div class="recent-title">
+      <span>最近</span>
+      <a id="openFullBtn" href="#">查看全部</a>
+    </div>
+    <div id="recentList" class="recent-list">
+      <div class="empty">暂无</div>
+    </div>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>
