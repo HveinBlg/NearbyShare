@@ -47,6 +47,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: node scripts/package-extension.js
 
+      - name: Copy Windows tray launcher
+        if: matrix.platform == 'win32'
+        shell: pwsh
+        run: |
+          Copy-Item tray/nearby-share-tray.ps1 dist/
+          Copy-Item tray/nearby-share-tray.vbs dist/
+
       - uses: actions/upload-artifact@v4
         with:
           name: nearby-share-${{ matrix.platform }}-${{ matrix.arch }}
@@ -77,7 +84,8 @@ jobs:
             ## NearbyShare ${{ github.ref_name }}
 
             **Downloads**
-            - `nearby-share-win32-x64.exe`      -- Windows 64-bit, double-click to run
+            - `nearby-share-win32-x64.exe`      -- Windows 64-bit, double-click to run (console window)
+            - `nearby-share-tray.vbs` + `nearby-share-tray.ps1` -- optional Windows system-tray launcher; drop these next to the .exe and double-click the .vbs instead
             - `nearby-share-darwin-arm64.dmg`   -- macOS Apple Silicon (recommended: mount, drag to Applications)
             - `nearby-share-darwin-arm64`       -- macOS Apple Silicon raw binary (alternative)
             - `nearby-share-linux-x64`          -- Linux, `chmod +x` then run
