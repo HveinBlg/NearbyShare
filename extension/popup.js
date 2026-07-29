@@ -168,7 +168,7 @@ function wireUI() {
   els.retryBtn.addEventListener('click', checkStatus);
   els.downloadBtn.addEventListener('click', () => {
     // 用户在源码中可替换为自己的 Releases 页面地址
-    chrome.tabs.create({ url: 'https://github.com/your-user/nearby-share/releases' });
+    chrome.tabs.create({ url: 'https://github.com/HveinBlg/NearbyShare/releases' });
   });
   els.cmdBtn.addEventListener('click', () => {
     const cmd = 'npx nearby-share@latest';
