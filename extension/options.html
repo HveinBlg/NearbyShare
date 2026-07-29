@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>NearbyShare 设置</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    body { width: 380px; padding: 12px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+    input[type="text"], input[type="url"] {
+      width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; outline: none;
+    }
+    input[type="text"]:focus, input[type="url"]:focus { border-color: var(--primary); }
+    .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .actions { margin-top: 14px; display: flex; gap: 6px; }
+    .saved { font-size: 12px; color: var(--success); margin-left: 8px; align-self: center; }
+  </style>
+</head>
+<body>
+  <h3 style="margin: 0 0 6px; color: var(--primary);">NearbyShare 设置</h3>
+
+  <label for="serverUrl">本地服务器地址</label>
+  <input id="serverUrl" type="url" placeholder="http://localhost:3000">
+  <div class="hint">运行 nearby-share 服务器时启动脚本会打印这个地址。默认 http://localhost:3000</div>
+
+  <label for="displayName">在设备列表中显示的名称</label>
+  <input id="displayName" type="text" placeholder="浏览器扩展" maxlength="20">
+
+  <div class="actions">
+    <button id="saveBtn" class="primary">保存</button>
+    <button id="testBtn" class="secondary">测试连接</button>
+    <span id="msg" class="saved"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

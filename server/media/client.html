@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <title>NearbyShare · 局域网互传</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>NearbyShare</span>
+    </div>
+    <div class="me">
+      <input id="myName" type="text" placeholder="你的名称" maxlength="20" autocomplete="off">
+      <button id="devicesBtn" class="ghost" title="在线设备">
+        <span id="deviceCount">0</span>
+      </button>
+      <button id="clearBtn" class="ghost" title="清空全部" aria-label="清空">✕</button>
+    </div>
+  </header>
+
+  <div id="devicesPanel" class="devices-panel" hidden></div>
+
+  <main id="feed" class="feed">
+    <div class="hint" id="hint">等待消息与文件…可发送文字、拖拽/粘贴文件或图片。</div>
+  </main>
+
+  <footer class="composer">
+    <button id="fileBtn" class="icon-btn" title="发送文件" aria-label="发送文件">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5V7a2 2 0 0 0-2-2h-7l-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/><path d="M17 17v6"/><path d="M14 20h6"/></svg>
+    </button>
+    <input type="file" id="fileInput" multiple hidden>
+    <textarea id="msgInput" rows="1" placeholder="输入消息，Enter 发送 / Shift+Enter 换行"></textarea>
+    <button id="sendBtn" class="send-btn" aria-label="发送">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+    </button>
+  </footer>
+
+  <div id="dropZone" class="dropzone" hidden>
+    <div class="dropzone-inner">
+      <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p>拖放文件到此上传</p>
+    </div>
+  </div>
+
+  <div id="uploads" class="uploads"></div>
+
+  <script src="/client.js"></script>
+</body>
+</html>
