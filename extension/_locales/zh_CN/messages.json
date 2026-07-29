@@ -83,6 +83,9 @@
   "popupNoLanUrls": {
     "message": "未检测到局域网地址，请检查网络设置。"
   },
+  "popupIfaceEthernet": {
+    "message": "有线"
+  },
   "popupTextPlaceholder": {
     "message": "输入要发送到局域网的文字…"
   },
