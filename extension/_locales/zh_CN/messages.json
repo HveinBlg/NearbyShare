@@ -71,6 +71,18 @@
   "popupOnlineTitle": {
     "message": "已连接到本地服务"
   },
+  "popupOtherDevices": {
+    "message": "其它设备访问："
+  },
+  "popupClickToCopy": {
+    "message": "点击复制"
+  },
+  "popupCopiedToClipboard": {
+    "message": "已复制 ✓"
+  },
+  "popupNoLanUrls": {
+    "message": "未检测到局域网地址，请检查网络设置。"
+  },
   "popupTextPlaceholder": {
     "message": "输入要发送到局域网的文字…"
   },
