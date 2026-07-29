@@ -42,8 +42,19 @@ async function init() {
 }
 
 async function checkStatus() {
-  const r = await sendMsg('ping');
-  online = !!r.ok;
+  // 让 background 也同步更新一次徽标
+  sendMsg('ping');
+
+  let info = null;
+  try {
+    const res = await fetch(cfg.serverUrl + '/api/ping', {
+      cache: 'no-store',
+      signal: AbortSignal.timeout ? AbortSignal.timeout(2000) : undefined,
+    });
+    if (res.ok) info = await res.json();
+  } catch (_) {}
+
+  online = !!info;
   els.dot.classList.toggle('online', online);
   els.dot.classList.toggle('offline', !online);
   els.offline.hidden = online;
@@ -52,7 +63,45 @@ async function checkStatus() {
   els.fileBtn.disabled = !online;
   els.sendPage.disabled = !online;
   els.sendSel.disabled = !online;
-  if (online) refreshRecent();
+  if (online) {
+    renderLanUrls(info && info.lanUrls);
+    refreshRecent();
+  }
+}
+
+function renderLanUrls(urls) {
+  const box = document.getElementById('lanUrls');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!urls || !urls.length) {
+    const empty = document.createElement('div');
+    empty.className = 'lan-empty';
+    empty.textContent = t('popupNoLanUrls');
+    box.append(empty);
+    return;
+  }
+  for (const { url, iface } of urls) {
+    const row = document.createElement('div');
+    row.className = 'lan-url';
+    row.title = iface ? iface : '';
+    const link = document.createElement('span');
+    link.textContent = url;
+    const hint = document.createElement('span');
+    hint.className = 'copy-hint';
+    hint.textContent = t('popupClickToCopy');
+    row.append(link, hint);
+    row.addEventListener('click', () => {
+      navigator.clipboard.writeText(url).then(() => {
+        row.classList.add('copied');
+        hint.textContent = t('popupCopiedToClipboard');
+        setTimeout(() => {
+          row.classList.remove('copied');
+          hint.textContent = t('popupClickToCopy');
+        }, 1500);
+      });
+    });
+    box.append(row);
+  }
 }
 
 async function refreshRecent() {
