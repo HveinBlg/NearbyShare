@@ -1,0 +1,185 @@
+{
+  "appName": {
+    "message": "NearbyShare"
+  },
+  "appDescription": {
+    "message": "局域网内多设备互传文字、图片和文件。需在电脑上配合运行本地伴生程序。"
+  },
+  "cmdOpenPanel": {
+    "message": "打开 NearbyShare 面板"
+  },
+  "actionTitle": {
+    "message": "NearbyShare"
+  },
+  "ctxSendSelection": {
+    "message": "通过 NearbyShare 发送选中文字"
+  },
+  "ctxSendLink": {
+    "message": "通过 NearbyShare 发送链接"
+  },
+  "ctxSendImage": {
+    "message": "通过 NearbyShare 发送图片"
+  },
+  "ctxSendPage": {
+    "message": "通过 NearbyShare 发送本页"
+  },
+  "notifTitle": {
+    "message": "NearbyShare"
+  },
+  "notifErrorSuffix": {
+    "message": " · 错误"
+  },
+  "notifSentSelection": {
+    "message": "已发送选中文字"
+  },
+  "notifSentLink": {
+    "message": "已发送链接"
+  },
+  "notifSentPage": {
+    "message": "已发送当前页面"
+  },
+  "notifSentImage": {
+    "message": "已发送图片"
+  },
+  "notifSendFailed": {
+    "message": "发送失败：$ERROR$",
+    "placeholders": {
+      "error": { "content": "$1" }
+    }
+  },
+  "popupOpenFullPanel": {
+    "message": "打开完整面板"
+  },
+  "popupSettings": {
+    "message": "设置"
+  },
+  "popupOfflineTitle": {
+    "message": "本地服务未启动"
+  },
+  "popupOfflineMsg": {
+    "message": "扩展需要一个本地服务器程序在你的电脑上运行，才能让其它设备通过 IP 访问。"
+  },
+  "popupDownload": {
+    "message": "下载服务器程序"
+  },
+  "popupCopyCommand": {
+    "message": "复制启动命令"
+  },
+  "popupRetry": {
+    "message": "重试连接"
+  },
+  "popupOnlineTitle": {
+    "message": "已连接到本地服务"
+  },
+  "popupTextPlaceholder": {
+    "message": "输入要发送到局域网的文字…"
+  },
+  "popupAddFiles": {
+    "message": "📎 添加文件"
+  },
+  "popupSend": {
+    "message": "发送"
+  },
+  "popupQuickActions": {
+    "message": "快捷操作"
+  },
+  "popupSendCurrentPage": {
+    "message": "发送当前页面"
+  },
+  "popupSendSelection": {
+    "message": "发送选中文字"
+  },
+  "popupRecent": {
+    "message": "最近"
+  },
+  "popupViewAll": {
+    "message": "查看全部"
+  },
+  "popupEmpty": {
+    "message": "暂无"
+  },
+  "popupUploadingFile": {
+    "message": "上传 $NAME$…",
+    "placeholders": {
+      "name": { "content": "$1" }
+    }
+  },
+  "popupSelectedFiles": {
+    "message": "已选择 $COUNT$ 个文件",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "popupSent": {
+    "message": "已发送 ✓"
+  },
+  "popupSendFailed": {
+    "message": "发送失败：$ERROR$",
+    "placeholders": {
+      "error": { "content": "$1" }
+    }
+  },
+  "popupSentPage": {
+    "message": "已发送当前页 ✓"
+  },
+  "popupSentSelection": {
+    "message": "已发送选中文字 ✓"
+  },
+  "popupNoSelection": {
+    "message": "未选中任何文字"
+  },
+  "popupCantReadSelection": {
+    "message": "无法读取选中文字：$ERROR$",
+    "placeholders": {
+      "error": { "content": "$1" }
+    }
+  },
+  "popupCopiedCommand": {
+    "message": "已复制：$CMD$",
+    "placeholders": {
+      "cmd": { "content": "$1" }
+    }
+  },
+  "popupCopyFailed": {
+    "message": "复制失败"
+  },
+  "popupDefaultName": {
+    "message": "浏览器扩展"
+  },
+  "timeJustNow": {
+    "message": "刚刚"
+  },
+  "optionsHeading": {
+    "message": "NearbyShare 设置"
+  },
+  "optionsServerLabel": {
+    "message": "本地服务器地址"
+  },
+  "optionsServerHint": {
+    "message": "运行服务器时启动脚本会打印这个地址。默认 http://localhost:3000"
+  },
+  "optionsNameLabel": {
+    "message": "在设备列表中显示的名称"
+  },
+  "optionsSave": {
+    "message": "保存"
+  },
+  "optionsTest": {
+    "message": "测试连接"
+  },
+  "optionsSaved": {
+    "message": "已保存"
+  },
+  "optionsInvalidUrl": {
+    "message": "URL 格式无效"
+  },
+  "optionsConnectOk": {
+    "message": "连接成功 ✓"
+  },
+  "optionsConnectFailed": {
+    "message": "连接失败：$ERROR$",
+    "placeholders": {
+      "error": { "content": "$1" }
+    }
+  }
+}

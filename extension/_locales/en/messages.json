@@ -1,0 +1,190 @@
+{
+  "appName": {
+    "message": "NearbyShare",
+    "description": "Extension name shown in the browser."
+  },
+  "appDescription": {
+    "message": "Send text, images, and files across devices on the same LAN. Requires a small companion server running on your computer.",
+    "description": "Extension description shown in Chrome Web Store and chrome://extensions."
+  },
+  "cmdOpenPanel": {
+    "message": "Open NearbyShare panel",
+    "description": "Keyboard shortcut description."
+  },
+  "actionTitle": {
+    "message": "NearbyShare",
+    "description": "Tooltip on toolbar icon."
+  },
+  "ctxSendSelection": {
+    "message": "Send selected text via NearbyShare"
+  },
+  "ctxSendLink": {
+    "message": "Send link via NearbyShare"
+  },
+  "ctxSendImage": {
+    "message": "Send image via NearbyShare"
+  },
+  "ctxSendPage": {
+    "message": "Send this page via NearbyShare"
+  },
+  "notifTitle": {
+    "message": "NearbyShare"
+  },
+  "notifErrorSuffix": {
+    "message": " · Error"
+  },
+  "notifSentSelection": {
+    "message": "Selected text sent"
+  },
+  "notifSentLink": {
+    "message": "Link sent"
+  },
+  "notifSentPage": {
+    "message": "Current page sent"
+  },
+  "notifSentImage": {
+    "message": "Image sent"
+  },
+  "notifSendFailed": {
+    "message": "Send failed: $ERROR$",
+    "placeholders": {
+      "error": { "content": "$1", "example": "network error" }
+    }
+  },
+  "popupOpenFullPanel": {
+    "message": "Open full panel"
+  },
+  "popupSettings": {
+    "message": "Settings"
+  },
+  "popupOfflineTitle": {
+    "message": "Local server not running"
+  },
+  "popupOfflineMsg": {
+    "message": "This extension needs a small companion server on your computer so other devices can reach it by IP address."
+  },
+  "popupDownload": {
+    "message": "Download server"
+  },
+  "popupCopyCommand": {
+    "message": "Copy start command"
+  },
+  "popupRetry": {
+    "message": "Retry"
+  },
+  "popupOnlineTitle": {
+    "message": "Connected to local server"
+  },
+  "popupTextPlaceholder": {
+    "message": "Type a message to send to the LAN…"
+  },
+  "popupAddFiles": {
+    "message": "📎 Add files"
+  },
+  "popupSend": {
+    "message": "Send"
+  },
+  "popupQuickActions": {
+    "message": "Quick actions"
+  },
+  "popupSendCurrentPage": {
+    "message": "Send current page"
+  },
+  "popupSendSelection": {
+    "message": "Send selected text"
+  },
+  "popupRecent": {
+    "message": "Recent"
+  },
+  "popupViewAll": {
+    "message": "View all"
+  },
+  "popupEmpty": {
+    "message": "Empty"
+  },
+  "popupUploadingFile": {
+    "message": "Uploading $NAME$…",
+    "placeholders": {
+      "name": { "content": "$1", "example": "photo.jpg" }
+    }
+  },
+  "popupSelectedFiles": {
+    "message": "$COUNT$ file(s) selected",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "popupSent": {
+    "message": "Sent ✓"
+  },
+  "popupSendFailed": {
+    "message": "Send failed: $ERROR$",
+    "placeholders": {
+      "error": { "content": "$1", "example": "HTTP 500" }
+    }
+  },
+  "popupSentPage": {
+    "message": "Current page sent ✓"
+  },
+  "popupSentSelection": {
+    "message": "Selected text sent ✓"
+  },
+  "popupNoSelection": {
+    "message": "No text selected"
+  },
+  "popupCantReadSelection": {
+    "message": "Cannot read selection: $ERROR$",
+    "placeholders": {
+      "error": { "content": "$1" }
+    }
+  },
+  "popupCopiedCommand": {
+    "message": "Copied: $CMD$",
+    "placeholders": {
+      "cmd": { "content": "$1" }
+    }
+  },
+  "popupCopyFailed": {
+    "message": "Copy failed"
+  },
+  "popupDefaultName": {
+    "message": "Browser extension",
+    "description": "Default display name when the user has not set one."
+  },
+  "timeJustNow": {
+    "message": "now"
+  },
+  "optionsHeading": {
+    "message": "NearbyShare Settings"
+  },
+  "optionsServerLabel": {
+    "message": "Local server URL"
+  },
+  "optionsServerHint": {
+    "message": "The server prints this URL on startup. Default http://localhost:3000"
+  },
+  "optionsNameLabel": {
+    "message": "Display name in device list"
+  },
+  "optionsSave": {
+    "message": "Save"
+  },
+  "optionsTest": {
+    "message": "Test connection"
+  },
+  "optionsSaved": {
+    "message": "Saved"
+  },
+  "optionsInvalidUrl": {
+    "message": "Invalid URL"
+  },
+  "optionsConnectOk": {
+    "message": "Connected ✓"
+  },
+  "optionsConnectFailed": {
+    "message": "Connection failed: $ERROR$",
+    "placeholders": {
+      "error": { "content": "$1" }
+    }
+  }
+}
