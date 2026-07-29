@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="zh-CN">
+<html>
 <head>
   <meta charset="utf-8">
-  <title>NearbyShare 设置</title>
+  <title>NearbyShare</title>
   <link rel="stylesheet" href="popup.css">
   <style>
     body { width: 380px; padding: 12px; }
@@ -18,21 +18,22 @@
   </style>
 </head>
 <body>
-  <h3 style="margin: 0 0 6px; color: var(--primary);">NearbyShare 设置</h3>
+  <h3 style="margin: 0 0 6px; color: var(--primary);" data-i18n="optionsHeading"></h3>
 
-  <label for="serverUrl">本地服务器地址</label>
+  <label for="serverUrl" data-i18n="optionsServerLabel"></label>
   <input id="serverUrl" type="url" placeholder="http://localhost:3000">
-  <div class="hint">运行 nearby-share 服务器时启动脚本会打印这个地址。默认 http://localhost:3000</div>
+  <div class="hint" data-i18n="optionsServerHint"></div>
 
-  <label for="displayName">在设备列表中显示的名称</label>
-  <input id="displayName" type="text" placeholder="浏览器扩展" maxlength="20">
+  <label for="displayName" data-i18n="optionsNameLabel"></label>
+  <input id="displayName" type="text" data-i18n-placeholder="popupDefaultName" maxlength="20">
 
   <div class="actions">
-    <button id="saveBtn" class="primary">保存</button>
-    <button id="testBtn" class="secondary">测试连接</button>
+    <button id="saveBtn" class="primary" data-i18n="optionsSave"></button>
+    <button id="testBtn" class="secondary" data-i18n="optionsTest"></button>
     <span id="msg" class="saved"></span>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

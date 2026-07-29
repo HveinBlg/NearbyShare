@@ -1,13 +1,18 @@
 /**
- * NearbyShare 浏览器扩展 background service worker (MV3)
- * 职责：
- * 1. 注册右键菜单（发送选中文字/图片/链接/当前页到局域网）
- * 2. 提供 sendText / sendUrl / sendImageUrl 等 API 供 popup 调用
- * 3. 定期 ping 本地服务器，把状态放到 storage 供 popup 读取
- * 4. 监听服务端 SSE，收到新消息时更新扩展图标 badge
+ * NearbyShare background service worker (MV3)
+ *
+ * Responsibilities:
+ * 1. Register context menus (Send selection / link / image / page to LAN)
+ * 2. Expose sendText / sendFile / sendImageUrl APIs for the popup
+ * 3. Periodically ping the local server and reflect status in storage + badge
  */
 
 const DEFAULT_SERVER = 'http://localhost:3000';
+
+function t(key, subs) {
+  const v = chrome.i18n.getMessage(key, subs);
+  return v || key;
+}
 
 async function getConfig() {
   const { serverUrl, displayName, deviceId } = await chrome.storage.local.get([
@@ -22,36 +27,35 @@ async function getConfig() {
   }
   return {
     serverUrl: (serverUrl || DEFAULT_SERVER).replace(/\/$/, ''),
-    displayName: displayName || '浏览器扩展',
+    displayName: displayName || t('popupDefaultName'),
     deviceId: id,
   };
 }
 
-/* ------------------------- 右键菜单 ------------------------- */
+/* ------------------------- Context menus ------------------------- */
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: 'nearby-share-selection',
-      title: '发送选中文字到局域网',
+      title: t('ctxSendSelection'),
       contexts: ['selection'],
     });
     chrome.contextMenus.create({
       id: 'nearby-share-link',
-      title: '发送链接到局域网',
+      title: t('ctxSendLink'),
       contexts: ['link'],
     });
     chrome.contextMenus.create({
       id: 'nearby-share-image',
-      title: '发送图片到局域网',
+      title: t('ctxSendImage'),
       contexts: ['image'],
     });
     chrome.contextMenus.create({
       id: 'nearby-share-page',
-      title: '发送当前页面链接到局域网',
+      title: t('ctxSendPage'),
       contexts: ['page'],
     });
   });
-  // 启动定时器
   chrome.alarms.create('nearby-share-ping', { periodInMinutes: 0.25 });
 });
 
@@ -59,34 +63,31 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     if (info.menuItemId === 'nearby-share-selection' && info.selectionText) {
       await sendText(info.selectionText);
-      notify('已发送选中文字');
+      notify(t('notifSentSelection'));
     } else if (info.menuItemId === 'nearby-share-link' && info.linkUrl) {
       await sendText(info.linkUrl);
-      notify('已发送链接');
+      notify(t('notifSentLink'));
     } else if (info.menuItemId === 'nearby-share-page') {
       const url = (tab && tab.url) || info.pageUrl;
       const title = tab && tab.title;
       await sendText(title ? `${title}\n${url}` : url);
-      notify('已发送当前页面');
+      notify(t('notifSentPage'));
     } else if (info.menuItemId === 'nearby-share-image' && info.srcUrl) {
       await sendImageUrl(info.srcUrl);
-      notify('已发送图片');
+      notify(t('notifSentImage'));
     }
   } catch (err) {
-    notify('发送失败：' + err.message, true);
+    notify(t('notifSendFailed', [err.message]), true);
   }
 });
 
-/* ------------------------- 状态检测 ------------------------- */
-
-// alarms 触发时 ping 服务器
+/* ------------------------- Status probing ------------------------- */
 if (!chrome.alarms.onAlarm.hasListener(handleAlarm)) {
   chrome.alarms.onAlarm.addListener(handleAlarm);
 }
 function handleAlarm(a) {
   if (a.name === 'nearby-share-ping') pingServer();
 }
-// 兜底：service worker 冷启动后也 ping 一次
 pingServer();
 
 async function pingServer() {
@@ -99,7 +100,6 @@ async function pingServer() {
     if (res.ok) {
       const info = await res.json();
       await setStatus({ online: true, info });
-      // 注册设备
       fetch(cfg.serverUrl + '/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,8 +118,7 @@ async function setStatus(status) {
   chrome.action.setBadgeBackgroundColor({ color: status.online ? '#10b981' : '#9ca3af' });
 }
 
-/* ------------------------- 核心发送 API ------------------------- */
-
+/* ------------------------- Core send API ------------------------- */
 async function sendText(text) {
   const cfg = await getConfig();
   const res = await fetch(cfg.serverUrl + '/api/message', {
@@ -152,9 +151,8 @@ async function sendFile(file, filename) {
 }
 
 async function sendImageUrl(url) {
-  // 通过 fetch 下载图片再上传到局域网
   const res = await fetch(url);
-  if (!res.ok) throw new Error('抓取图片失败 ' + res.status);
+  if (!res.ok) throw new Error('fetch image ' + res.status);
   const blob = await res.blob();
   let name = url.split('/').pop().split('?')[0] || 'image';
   if (!/\.[a-z0-9]+$/i.test(name)) {
@@ -165,14 +163,13 @@ async function sendImageUrl(url) {
   return sendFile(file, name);
 }
 
-/* ------------------------- 消息通道 ------------------------- */
+/* ------------------------- Message channel ------------------------- */
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     try {
       if (msg.type === 'ping') sendResponse({ ok: await pingServer() });
       else if (msg.type === 'send-text') sendResponse({ ok: true, data: await sendText(msg.text) });
       else if (msg.type === 'send-file') {
-        // popup 传来 base64，因为 File/Blob 不能直接跨消息传
         const bin = base64ToBytes(msg.b64);
         const file = new Blob([bin], { type: msg.mime || 'application/octet-stream' });
         sendResponse({ ok: true, data: await sendFile(file, msg.name) });
@@ -189,7 +186,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: false, error: err.message });
     }
   })();
-  return true; // async
+  return true;
 });
 
 function base64ToBytes(b64) {
@@ -205,7 +202,7 @@ function notify(message, isError = false) {
     chrome.notifications.create({
       type: 'basic',
       iconUrl: 'icons/icon-128.png',
-      title: 'NearbyShare' + (isError ? ' · 错误' : ''),
+      title: t('notifTitle') + (isError ? t('notifErrorSuffix') : ''),
       message,
       priority: 0,
     });

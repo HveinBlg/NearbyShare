@@ -2,10 +2,11 @@
   "manifest_version": 3,
   "name": "NearbyShare",
   "version": "1.0.0",
-  "description": "局域网多设备互传文字、图片和文件。需配合本地服务器程序使用。",
+  "description": "__MSG_appDescription__",
+  "default_locale": "en",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "NearbyShare",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",
@@ -52,7 +53,7 @@
       "suggested_key": {
         "default": "Alt+Shift+L"
       },
-      "description": "打开 NearbyShare 面板"
+      "description": "__MSG_cmdOpenPanel__"
     }
   }
 }

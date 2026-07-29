@@ -1,6 +1,7 @@
 'use strict';
 
 const $ = (id) => document.getElementById(id);
+const t = (k, s) => (window.i18n ? window.i18n.t(k, s) : chrome.i18n.getMessage(k, s));
 
 const els = {
   dot: $('statusDot'),
@@ -34,7 +35,7 @@ async function sendMsg(type, extra = {}) {
 
 async function init() {
   const r = await sendMsg('get-config');
-  cfg = r.data || { serverUrl: 'http://localhost:3000', displayName: '扩展' };
+  cfg = r.data || { serverUrl: 'http://localhost:3000', displayName: t('popupDefaultName') };
   els.onlineUrl.textContent = cfg.serverUrl;
   await checkStatus();
   wireUI();
@@ -67,7 +68,11 @@ function renderRecent(state) {
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 6);
   if (!all.length) {
-    els.recent.innerHTML = '<div class="empty">暂无</div>';
+    els.recent.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = t('popupEmpty');
+    els.recent.append(empty);
     return;
   }
   els.recent.innerHTML = '';
@@ -80,10 +85,10 @@ function renderRecent(state) {
     const c = document.createElement('span');
     c.className = 'content';
     c.textContent = it.kind === 'file' ? '📎 ' + it.name : it.text;
-    const t = document.createElement('span');
-    t.className = 'time';
-    t.textContent = fmtTime(it.timestamp);
-    item.append(who, c, t);
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = fmtTime(it.timestamp);
+    item.append(who, c, time);
     if (it.kind === 'file') {
       item.title = it.name + ' · ' + fmtSize(it.size);
       item.style.cursor = 'pointer';
@@ -97,10 +102,10 @@ function renderRecent(state) {
 
 function fmtTime(ts) {
   const d = Date.now() - ts;
-  if (d < 60_000) return '刚刚';
-  if (d < 3_600_000) return Math.floor(d / 60_000) + '分';
-  if (d < 86_400_000) return Math.floor(d / 3_600_000) + '时';
-  return Math.floor(d / 86_400_000) + '天';
+  if (d < 60_000) return t('timeJustNow') || 'now';
+  if (d < 3_600_000) return Math.floor(d / 60_000) + 'm';
+  if (d < 86_400_000) return Math.floor(d / 3_600_000) + 'h';
+  return Math.floor(d / 86_400_000) + 'd';
 }
 function fmtSize(n) {
   if (n < 1024) return n + 'B';
@@ -127,16 +132,16 @@ async function doSend() {
       els.text.value = '';
     }
     for (const f of files) {
-      setStatus(`上传 ${f.name}…`);
+      setStatus(t('popupUploadingFile', [f.name]));
       const b64 = await fileToBase64(f);
       const r = await sendMsg('send-file', { name: f.name, mime: f.type, b64 });
       if (!r.ok) throw new Error(r.error);
     }
     els.file.value = '';
-    setStatus('已发送 ✓', 'ok');
+    setStatus(t('popupSent'), 'ok');
     refreshRecent();
   } catch (err) {
-    setStatus('发送失败：' + err.message, 'error');
+    setStatus(t('popupSendFailed', [err.message]), 'error');
   } finally {
     els.sendBtn.disabled = !online;
   }
@@ -156,7 +161,7 @@ function wireUI() {
   els.fileBtn.addEventListener('click', () => els.file.click());
   els.file.addEventListener('change', () => {
     if (els.file.files.length) {
-      setStatus(`已选择 ${els.file.files.length} 个文件`);
+      setStatus(t('popupSelectedFiles', [String(els.file.files.length)]));
     }
   });
   els.text.addEventListener('keydown', (e) => {
@@ -167,14 +172,13 @@ function wireUI() {
 
   els.retryBtn.addEventListener('click', checkStatus);
   els.downloadBtn.addEventListener('click', () => {
-    // 用户在源码中可替换为自己的 Releases 页面地址
-    chrome.tabs.create({ url: 'https://github.com/your-user/nearby-share/releases' });
+    chrome.tabs.create({ url: 'https://github.com/HveinBlg/NearbyShare/releases' });
   });
   els.cmdBtn.addEventListener('click', () => {
     const cmd = 'npx nearby-share@latest';
     navigator.clipboard.writeText(cmd).then(
-      () => setStatus('已复制：' + cmd, 'ok'),
-      () => setStatus('复制失败', 'error'),
+      () => setStatus(t('popupCopiedCommand', [cmd]), 'ok'),
+      () => setStatus(t('popupCopyFailed'), 'error'),
     );
   });
 
@@ -190,7 +194,7 @@ function wireUI() {
     if (!tab || !tab.url) return;
     const text = tab.title ? `${tab.title}\n${tab.url}` : tab.url;
     const r = await sendMsg('send-text', { text });
-    setStatus(r.ok ? '已发送当前页 ✓' : '失败：' + r.error, r.ok ? 'ok' : 'error');
+    setStatus(r.ok ? t('popupSentPage') : t('popupSendFailed', [r.error]), r.ok ? 'ok' : 'error');
     if (r.ok) refreshRecent();
   });
 
@@ -203,12 +207,12 @@ function wireUI() {
         func: () => String(window.getSelection() || ''),
       });
       const text = res && res.result;
-      if (!text) return setStatus('未选中任何文字', 'error');
+      if (!text) return setStatus(t('popupNoSelection'), 'error');
       const r = await sendMsg('send-text', { text });
-      setStatus(r.ok ? '已发送选中文字 ✓' : '失败：' + r.error, r.ok ? 'ok' : 'error');
+      setStatus(r.ok ? t('popupSentSelection') : t('popupSendFailed', [r.error]), r.ok ? 'ok' : 'error');
       if (r.ok) refreshRecent();
     } catch (err) {
-      setStatus('无法读取选中文字：' + err.message, 'error');
+      setStatus(t('popupCantReadSelection', [err.message]), 'error');
     }
   });
 }

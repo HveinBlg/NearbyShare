@@ -113,6 +113,18 @@ node server/bin.js
 - 明暗色主题跟随系统
 - iOS 安全区适配
 
+### 国际化 / i18n
+
+扩展 UI 内置英文（默认回退）+ 简体中文。字符串来自 `extension/_locales/<lang>/messages.json`，通过 `chrome.i18n.getMessage()` / `data-i18n` 属性注入到界面。
+
+新增语言步骤：
+
+1. 复制 `extension/_locales/en/` 到 `extension/_locales/<你的语言代码>/`（例如 `ja` / `de` / `fr` / `ko`）
+2. 编辑 `messages.json` 里各 `message` 字段
+3. 重新加载扩展，用户在浏览器语言设置成对应语言即会自动生效
+
+Web UI（其它设备浏览器访问）目前只有中文界面，将来可比照上面思路做多语言。
+
 ---
 
 ## 命令行参数
