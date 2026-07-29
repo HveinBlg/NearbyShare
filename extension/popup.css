@@ -54,8 +54,24 @@ header {
 .banner.online { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); }
 .banner-title { font-weight: 600; margin-bottom: 4px; }
 .banner-msg { color: var(--muted); font-size: 12px; line-height: 1.4; margin-bottom: 8px; }
-.banner.online .banner-msg { color: var(--text); font-family: ui-monospace, Menlo, monospace; margin-bottom: 0; }
+.banner.online .banner-msg { color: var(--muted); font-family: ui-monospace, Menlo, monospace; margin-bottom: 8px; font-size: 11px; }
 .banner-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.lan-block { margin-top: 6px; padding-top: 8px; border-top: 1px dashed rgba(16, 185, 129, 0.35); }
+.lan-header { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.lan-urls { display: flex; flex-direction: column; gap: 4px; }
+.lan-url {
+  padding: 5px 8px; background: var(--card); border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+  cursor: pointer; user-select: all; color: var(--text);
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  transition: background 0.15s;
+}
+.lan-url:hover { background: rgba(16, 185, 129, 0.08); border-color: var(--success); }
+.lan-url .copy-hint { color: var(--muted); font-size: 10px; font-family: inherit; opacity: 0; transition: opacity 0.15s; }
+.lan-url:hover .copy-hint { opacity: 1; }
+.lan-url.copied { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
+.lan-empty { font-size: 11px; color: var(--muted); font-style: italic; }
 
 button {
   border: none; cursor: pointer; font-family: inherit; font-size: 12px;

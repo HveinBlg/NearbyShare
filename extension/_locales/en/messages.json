@@ -75,6 +75,18 @@
   "popupOnlineTitle": {
     "message": "Connected to local server"
   },
+  "popupOtherDevices": {
+    "message": "Other devices connect via:"
+  },
+  "popupClickToCopy": {
+    "message": "click to copy"
+  },
+  "popupCopiedToClipboard": {
+    "message": "copied ✓"
+  },
+  "popupNoLanUrls": {
+    "message": "No LAN address detected. Check network settings."
+  },
   "popupTextPlaceholder": {
     "message": "Type a message to send to the LAN…"
   },

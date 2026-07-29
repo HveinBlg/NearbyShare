@@ -1,31 +1,45 @@
 {
   "name": "nearby-share",
   "version": "1.0.0",
-  "description": "局域网内多设备互传文字、图片和文件的轻量工具",
-  "main": "server.js",
-  "type": "commonjs",
+  "description": "浏览器扩展 + 本地伴生服务器：局域网内多设备互传文字、图片、文件（零依赖）",
+  "main": "server/bin.js",
   "bin": {
-    "nearby-share": "server.js"
+    "nearby-share": "server/bin.js"
   },
+  "files": [
+    "server/**/*.js",
+    "server/media/**/*"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server/bin.js",
+    "test": "node selftest.js",
+    "bundle": "node scripts/bundle.js",
+    "build:sea": "node scripts/build-sea.js",
+    "build:mac-dmg": "node scripts/build-mac-dmg.js",
+    "package:extension": "node scripts/package-extension.js",
+    "gen:icons": "node extension/icons/generate.js"
   },
   "keywords": [
     "lan",
     "share",
     "file-transfer",
     "airdrop",
-    "localsend"
+    "localsend",
+    "browser-extension",
+    "chrome-extension",
+    "edge-extension",
+    "zero-dependency"
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "express": "^4.19.2",
-    "multer": "^1.4.5-lts.1",
-    "ws": "^8.18.0",
-    "qrcode-terminal": "^0.12.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HveinBlg/NearbyShare.git"
   },
+  "bugs": {
+    "url": "https://github.com/HveinBlg/NearbyShare/issues"
+  },
+  "homepage": "https://github.com/HveinBlg/NearbyShare#readme",
   "engines": {
     "node": ">=18"
   }

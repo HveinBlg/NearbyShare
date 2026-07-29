@@ -118,9 +118,16 @@ async function route(req, res, ctx) {
     return serveStatic(res, path.join(MEDIA_DIR, p.slice(1)));
   }
 
-  // 健康检查（扩展会用来判断服务是否在线）
+  // 健康检查（扩展会用来判断服务是否在线，同时下发局域网 URL 供 popup 显示）
   if (method === 'GET' && p === '/api/ping') {
-    return sendJson(res, 200, { ok: true, version: 1, name: 'nearby-share' });
+    const port = req.socket.localPort;
+    return sendJson(res, 200, {
+      ok: true,
+      version: 1,
+      name: 'nearby-share',
+      port,
+      lanUrls: getLanUrls(port),
+    });
   }
 
   // 拉取整个状态
