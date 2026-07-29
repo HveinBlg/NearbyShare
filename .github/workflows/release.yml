@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+          - os: macos-13
+            platform: darwin
+            arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bundle
+        run: node scripts/bundle.js
+
+      - name: Build SEA binary
+        run: node scripts/build-sea.js
+
+      - name: Sign binary (macOS)
+        if: matrix.platform == 'darwin'
+        run: codesign --sign - --force dist/nearby-share-darwin-${{ matrix.arch }}
+
+      - name: Package extension (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: node scripts/package-extension.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nearby-share-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/nearby-share-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Show artifacts
+        run: ls -la artifacts/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          body: |
+            ## NearbyShare ${{ github.ref_name }}
+
+            **Downloads**
+            - `nearby-share-win32-x64.exe`   -- Windows 64-bit, double-click to run
+            - `nearby-share-darwin-arm64`    -- macOS Apple Silicon (first run: allow in System Settings > Privacy & Security)
+            - `nearby-share-darwin-x64`      -- macOS Intel
+            - `nearby-share-linux-x64`       -- Linux, `chmod +x` then run
+            - `nearby-share-extension.zip`   -- Browser extension (Chrome/Edge sideload)
