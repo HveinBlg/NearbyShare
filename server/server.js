@@ -345,18 +345,37 @@ function handleDownload(req, res, ctx, pathname, query) {
   });
 }
 
+/**
+ * 收集机器上适合被同一局域网内其它设备访问的 URL。
+ *
+ * 过滤规则：
+ *   - IPv4 且非 loopback
+ *   - 剔除 link-local (169.254.x.x)：Windows 拿不到 DHCP 时的应急地址，永远不通
+ *   - 剔除虚拟适配器（VMware / VirtualBox / WSL / Hyper-V / Docker / 蓝牙 / 环回等）
+ *
+ * 如果过滤后为空（例如用户全靠虚拟网络），回退返回未过滤的完整列表，
+ * 避免因过度过滤而让用户什么都看不到。
+ */
 function getLanUrls(port) {
   const os = require('os');
   const nets = os.networkInterfaces();
-  const list = [];
+
+  // 接口名黑名单（大小写不敏感的子串匹配）。命中即视为虚拟/无用。
+  const VIRTUAL_IFACE = /(v ?ethernet|vmware|virtual|vmnet|vbox|virtualbox|tap-|tun\d|docker|hyper.?v|wsl|npcap|loopback|bluetooth|pseudo|teredo|isatap|tailscale|zerotier|utun|awdl|llw|anpi|ipsec)/i;
+
+  const kept = [];
+  const dropped = [];
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
-      if (net.family === 'IPv4' && !net.internal) {
-        list.push({ iface: name, url: `http://${net.address}:${port}`, ip: net.address });
-      }
+      if (net.family !== 'IPv4' || net.internal) continue;
+      if (net.address.startsWith('169.254.')) continue;
+      const entry = { iface: name, url: `http://${net.address}:${port}`, ip: net.address };
+      if (VIRTUAL_IFACE.test(name)) dropped.push(entry);
+      else kept.push(entry);
     }
   }
-  return list;
+  // 保底：全被过滤时就返回原始的（除了 link-local）
+  return kept.length > 0 ? kept : dropped;
 }
 
 module.exports = { startServer, getLanUrls, mimeFromName };

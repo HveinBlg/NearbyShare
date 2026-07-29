@@ -62,13 +62,19 @@ header {
 .lan-urls { display: flex; flex-direction: column; gap: 4px; }
 .lan-url {
   padding: 5px 8px; background: var(--card); border: 1px solid rgba(16, 185, 129, 0.35);
-  border-radius: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+  border-radius: 6px; font-size: 12px;
   cursor: pointer; user-select: all; color: var(--text);
-  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  display: flex; align-items: center; gap: 6px;
   transition: background 0.15s;
 }
 .lan-url:hover { background: rgba(16, 185, 129, 0.08); border-color: var(--success); }
-.lan-url .copy-hint { color: var(--muted); font-size: 10px; font-family: inherit; opacity: 0; transition: opacity 0.15s; }
+.lan-url-addr { font-family: ui-monospace, Menlo, monospace; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lan-iface {
+  font-size: 10px; padding: 1px 6px; border-radius: 999px;
+  background: rgba(16, 185, 129, 0.15); color: var(--success);
+  font-family: inherit; flex-shrink: 0;
+}
+.lan-url .copy-hint { color: var(--muted); font-size: 10px; font-family: inherit; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
 .lan-url:hover .copy-hint { opacity: 1; }
 .lan-url.copied { background: rgba(16, 185, 129, 0.15); border-color: var(--success); }
 .lan-empty { font-size: 11px; color: var(--muted); font-style: italic; }

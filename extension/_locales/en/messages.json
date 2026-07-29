@@ -87,6 +87,9 @@
   "popupNoLanUrls": {
     "message": "No LAN address detected. Check network settings."
   },
+  "popupIfaceEthernet": {
+    "message": "Ethernet"
+  },
   "popupTextPlaceholder": {
     "message": "Type a message to send to the LAN…"
   },
