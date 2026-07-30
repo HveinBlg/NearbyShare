@@ -181,7 +181,20 @@ APPLESCRIPT
     fs.writeFileSync(path.join(ICONSET, name), generateIconPNG(size));
   }
   const ICNS = path.join(RESOURCES, 'AppIcon.icns');
-  execSync(`iconutil -c icns -o "${ICNS}" "${ICONSET}"`, { stdio: 'inherit' });
+  try {
+    execSync(`iconutil -c icns -o "${ICNS}" "${ICONSET}"`, { stdio: 'inherit' });
+  } catch (err) {
+    console.error('iconutil failed. Falling back to sips + iconutil workaround...');
+    // 有些 CI 环境下 iconutil 对纯代码生成的 PNG 校验更严格，
+    // 用 sips 重新处理一遍以确保 PNG 格式完全合规
+    for (const { name } of ICON_ENTRIES) {
+      const f = path.join(ICONSET, name);
+      try {
+        execSync(`sips -s format png "${f}" --out "${f}"`, { stdio: 'pipe' });
+      } catch (_) { /* sips may not help, continue */ }
+    }
+    execSync(`iconutil -c icns -o "${ICNS}" "${ICONSET}"`, { stdio: 'inherit' });
+  }
 
   /* 4) 写 Info.plist -------------------------------------------------------- */
   const PLIST = `<?xml version="1.0" encoding="UTF-8"?>
@@ -232,10 +245,28 @@ APPLESCRIPT
   const DMG = path.join(DIST, `nearby-share-darwin-${arch}.dmg`);
   if (fs.existsSync(DMG)) fs.unlinkSync(DMG);
   console.log('Building DMG...');
-  execSync(
-    `hdiutil create -volname "${APP_NAME}" -srcfolder "${STAGE}" -ov -format UDZO "${DMG}"`,
-    { stdio: 'inherit' }
-  );
+
+  // hdiutil 在 CI 中经常因 "Resource busy" 失败（macOS Spotlight / fsevents 等
+  // 仍在索引 .app），加入 sync + sleep + 重试来解决。
+  // 参见 https://github.com/actions/runner-images/issues/7522
+  execSync('sync', { stdio: 'ignore' });
+
+  const hdiutilCmd = `hdiutil create -volname "${APP_NAME}" -srcfolder "${STAGE}" -ov -format UDZO "${DMG}"`;
+  const MAX_RETRIES = 4;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      execSync(hdiutilCmd, { stdio: 'inherit' });
+      break;
+    } catch (err) {
+      if (attempt === MAX_RETRIES) {
+        console.error(`hdiutil failed after ${MAX_RETRIES} attempts`);
+        throw err;
+      }
+      const delaySec = attempt * 5;
+      console.warn(`hdiutil attempt ${attempt} failed, retrying in ${delaySec}s...`);
+      execSync(`sleep ${delaySec}`);
+    }
+  }
 
   /* 7) 清理临时目录 -------------------------------------------------------- */
   fs.rmSync(STAGE, { recursive: true, force: true });

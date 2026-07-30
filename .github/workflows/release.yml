@@ -41,7 +41,10 @@ jobs:
 
       - name: Build .app + .dmg (macOS)
         if: matrix.platform == 'darwin'
-        run: node scripts/build-mac-dmg.js
+        run: |
+          # Give the filesystem time to settle after codesign
+          sleep 3
+          node scripts/build-mac-dmg.js
 
       - name: Package extension (Linux only)
         if: matrix.os == 'ubuntu-latest'
