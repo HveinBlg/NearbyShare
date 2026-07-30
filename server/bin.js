@@ -31,35 +31,56 @@ function usage() {
 }
 
 /**
- * 在 Windows 上双击启动 exe 时把自身控制台窗口最小化到任务栏。
+ * 在 Windows 上双击启动 exe 时把控制台窗口最小化到任务栏。
  *
- * 判断条件：GetConsoleProcessList 返回 1 —— 只有我们一个进程附着在
- * 这个控制台。这几乎必然是"从资源管理器双击 exe"的情形。若是从 cmd
- * 或 PowerShell 手动启动，控制台会被 shell 也占用（返回 >= 2），此时
- * 不最小化，避免把用户的终端窗口也压下去。
+ * 上一版的实现有 bug：spawn PowerShell 时用了 `detached: true` + `windowsHide: true`，
+ * 导致子 PowerShell 拿到的是自己那个（不存在的/隐藏的）控制台，而不是父进程
+ * （我们）的控制台，所以 GetConsoleWindow() 返回 0，ShowWindow 没有效果。
  *
- * 实现：spawn 一个隐藏的 powershell.exe 调 Win32 API：
- *   kernel32.GetConsoleWindow / GetConsoleProcessList
- *   user32.ShowWindow(hwnd, SW_SHOWMINNOACTIVE=7)
+ * 修法：让 PowerShell 用 `AttachConsole(parentPid)` 显式挂接到我们的控制台。
+ *   - 传入父进程 PID（我们自己的 pid）作为参数
+ *   - PowerShell 先 FreeConsole() 释放自己隐含的控制台
+ *   - 再 AttachConsole(parentPid) 挂到父控制台
+ *   - GetConsoleProcessList 现在返回该控制台上所有已挂接进程数：
+ *       双击场景  = [父 node, 我们这个 powershell] = 2
+ *       从终端    = [用户 shell, 父 node, 我们这个 powershell] >= 3
+ *     所以判断改成 `-le 2`
+ *   - ShowWindow(GetConsoleWindow(), 7) — SW_SHOWMINNOACTIVE，最小化不抢焦点
+ *   - FreeConsole 收尾
  *
- * 全过程静默：spawn 失败也不影响服务器主流程。
+ * 命令通过 -EncodedCommand 传递（UTF-16LE + Base64），避免多行字符串在
+ * shell 参数里被截断或转义出错。
+ *
+ * 全过程静默：spawn 失败、PowerShell 缺失、Attach 失败都不影响服务器。
  */
 function tryMinimizeConsoleOnWindows() {
   if (process.platform !== 'win32') return;
-  const psCommand = [
-    "$sig = '[DllImport(\"kernel32\")] public static extern System.IntPtr GetConsoleWindow();",
-    " [DllImport(\"kernel32\")] public static extern uint GetConsoleProcessList(uint[] p, uint c);",
-    " [DllImport(\"user32\")] public static extern bool ShowWindow(System.IntPtr h, int c);';",
-    "Add-Type -MemberDefinition $sig -Name W -Namespace N -ErrorAction SilentlyContinue;",
-    // 只有当前控制台仅一个进程附着时才最小化（= 双击启动，而非从终端）
-    "$buf = New-Object uint32[] 4;",
-    "if ([N.W]::GetConsoleProcessList($buf, 4) -eq 1) {",
-    "  [void][N.W]::ShowWindow([N.W]::GetConsoleWindow(), 7);",
-    "}",
-  ].join('');
+  const parentPid = process.pid;
+  const psScript = `
+$sig = @'
+[DllImport("kernel32", SetLastError=true)] public static extern bool FreeConsole();
+[DllImport("kernel32", SetLastError=true)] public static extern bool AttachConsole(uint pid);
+[DllImport("kernel32")] public static extern System.IntPtr GetConsoleWindow();
+[DllImport("kernel32")] public static extern uint GetConsoleProcessList(uint[] p, uint c);
+[DllImport("user32")] public static extern bool ShowWindow(System.IntPtr h, int c);
+'@
+Add-Type -MemberDefinition $sig -Name W -Namespace N -ErrorAction SilentlyContinue
+[void][N.W]::FreeConsole()
+if ([N.W]::AttachConsole(${parentPid})) {
+    $buf = New-Object uint32[] 8
+    $count = [N.W]::GetConsoleProcessList($buf, 8)
+    # 2 = [node parent, this powershell] -> 双击 -> 最小化
+    # >= 3 = 还挂着用户的 shell -> 从终端 -> 保持原样
+    if ($count -le 2) {
+        [void][N.W]::ShowWindow([N.W]::GetConsoleWindow(), 7)
+    }
+    [void][N.W]::FreeConsole()
+}
+`.trim();
+  const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
   try {
     const child = require('child_process').spawn('powershell.exe', [
-      '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', psCommand,
+      '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-EncodedCommand', encoded,
     ], { stdio: 'ignore', windowsHide: true, detached: true });
     child.unref();
     child.on('error', () => { /* 忽略 —— PowerShell 缺失时不要影响启动 */ });
