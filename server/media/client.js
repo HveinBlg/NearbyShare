@@ -58,6 +58,87 @@ async function register() {
   } catch (_) {}
 }
 
+// -------- 自定义确认弹窗（替代难看的浏览器原生 confirm）--------
+/**
+ * 用法：
+ *   const ok = await confirmDialog({
+ *     title: '删除消息',
+ *     message: '所有设备将同步移除。',
+ *     confirmText: '删除',
+ *     danger: true,
+ *   });
+ *   if (!ok) return;
+ *
+ * 交互：
+ *   - Esc / 点遮罩 / 点取消 → 返回 false
+ *   - Enter → 触发当前聚焦按钮
+ *   - danger 时默认聚焦"取消"（防误按 Enter）；非 danger 聚焦"确定"
+ */
+function confirmDialog({ title, message, confirmText = '确定', cancelText = '取消', danger = false } = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+
+    if (title) {
+      const t = document.createElement('div');
+      t.className = 'modal-title';
+      t.textContent = title;
+      modal.append(t);
+    }
+    if (message) {
+      const m = document.createElement('div');
+      m.className = 'modal-message';
+      m.textContent = message;
+      modal.append(m);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'modal-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'modal-btn cancel';
+    cancelBtn.textContent = cancelText;
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'modal-btn ' + (danger ? 'danger' : 'primary');
+    confirmBtn.textContent = confirmText;
+
+    actions.append(cancelBtn, confirmBtn);
+    modal.append(actions);
+    overlay.append(modal);
+    document.body.append(overlay);
+
+    let done = false;
+    function close(result) {
+      if (done) return;
+      done = true;
+      overlay.classList.add('closing');
+      document.removeEventListener('keydown', onKey);
+      setTimeout(() => overlay.remove(), 180);
+      resolve(result);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); close(false); }
+      else if (e.key === 'Enter') { e.preventDefault(); close(document.activeElement === cancelBtn ? false : true); }
+    }
+    document.addEventListener('keydown', onKey);
+
+    cancelBtn.addEventListener('click', () => close(false));
+    confirmBtn.addEventListener('click', () => close(true));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+
+    // 焦点：破坏性操作默认焦点在取消，避免手滑 Enter 误删
+    setTimeout(() => (danger ? cancelBtn : confirmBtn).focus(), 50);
+  });
+}
+
 // -------- 渲染 --------
 const rendered = new Set();
 
@@ -134,7 +215,13 @@ function renderTextActions(m, isSelf) {
     delBtn.type = 'button';
     delBtn.textContent = '删除';
     delBtn.addEventListener('click', async () => {
-      if (!confirm('删除这条消息？')) return;
+      const ok = await confirmDialog({
+        title: '删除消息',
+        message: '这条消息将从所有已连接设备移除。',
+        confirmText: '删除',
+        danger: true,
+      });
+      if (!ok) return;
       try {
         const res = await fetch(`/api/messages/${m.id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -205,7 +292,13 @@ function renderFile(f, isSelf) {
     del.type = 'button';
     del.textContent = '删除';
     del.addEventListener('click', async () => {
-      if (!confirm(`删除「${f.name}」？`)) return;
+      const ok = await confirmDialog({
+        title: '删除文件',
+        message: `「${f.name}」将从所有已连接设备移除，无法恢复。`,
+        confirmText: '删除',
+        danger: true,
+      });
+      if (!ok) return;
       await fetch(`/api/files/${f.id}`, { method: 'DELETE' });
     });
     actions.append(del);
@@ -469,7 +562,13 @@ function openViewer(src) {
 
 // -------- 清空 --------
 clearBtn.addEventListener('click', async () => {
-  if (!confirm('清空所有消息与文件？(所有设备生效)')) return;
+  const ok = await confirmDialog({
+    title: '清空全部',
+    message: '所有消息与文件将从服务器与所有已连接设备移除，无法恢复。',
+    confirmText: '清空',
+    danger: true,
+  });
+  if (!ok) return;
   await fetch('/api/clear', { method: 'POST' });
 });
 

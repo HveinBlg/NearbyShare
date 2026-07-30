@@ -33,54 +33,76 @@ function usage() {
 /**
  * 在 Windows 上双击启动 exe 时把控制台窗口最小化到任务栏。
  *
- * 之前的实现在 spawn PowerShell 时用了 `detached: true` + `windowsHide: true`，
- * 结果 PowerShell 拿到的是自己那个（不存在/隐藏的）控制台句柄而非父 Node 进程的。
- * GetConsoleWindow() 返回 0，ShowWindow 相当于没做事。
+ * 前几版的坑：
+ *   - PR #11: spawn PowerShell 时用 `detached:true + windowsHide:true`，
+ *     导致 PowerShell 拿到的是自己那个（没有的）控制台，ShowWindow 无效
+ *   - PR #15: 加了 AttachConsole 补救，但 spawn 选项没改；某些 Windows
+ *     配置下 CREATE_NO_WINDOW 会阻止 AttachConsole，依旧失败
  *
- * 正解：让 PowerShell 用 `AttachConsole(parentPid)` 显式挂到我们的控制台上。
- *   - 从 Node 传入父 PID（process.pid）
- *   - PowerShell 先 FreeConsole() 释放自己隐含的控制台
- *   - 再 AttachConsole(parentPid) 挂到父控制台
- *   - GetConsoleProcessList 返回该控制台已挂接进程数：
- *       双击场景 = [父 node, 我们的 powershell] = 2
- *       从终端   = [用户 shell, 父 node, 我们的 powershell] >= 3
- *     判断改为 `-le 2`
- *   - ShowWindow(GetConsoleWindow(), 7) —— SW_SHOWMINNOACTIVE，最小化不抢焦点
- *   - FreeConsole 收尾
+ * 本版方案：让 PowerShell **继承**父进程（我们）的可见控制台。
+ *   - spawn 时不传 windowsHide 也不传 detached
+ *   - stdio 'ignore' 屏蔽 PS 的 stdin/stdout/stderr，不影响父控制台显示
+ *   - PS 内 GetConsoleWindow() 直接返回父控制台 HWND（因为继承）
+ *   - GetConsoleProcessList 返回：[父 node, 本 powershell] = 2（双击场景）
+ *     或 [用户 shell, 父 node, 本 powershell] >= 3（从终端启动）
+ *   - `-le 2` 时才 ShowWindow，避免把用户终端也压下去
  *
- * 命令通过 -EncodedCommand（UTF-16LE + Base64）传递，避免多行字符串在 cmd
- * 引号里被截断或转义出错。全过程静默；PowerShell 缺失或 Attach 失败不影响服务器。
+ * 加了文件日志到 `~/.nearby-share/minimize.log`，方便用户在最小化不生效
+ * 时贴给我看。日志记录：spawn 是否失败、count、hwnd、ShowWindow 返回值、
+ * 异常信息。写不了日志文件不影响正常运行。
  */
 function tryMinimizeConsoleOnWindows() {
   if (process.platform !== 'win32') return;
-  const parentPid = process.pid;
+
+  const logDir = path.join(os.homedir(), '.nearby-share');
+  const logPath = path.join(logDir, 'minimize.log');
+  try { fs.mkdirSync(logDir, { recursive: true }); } catch (_) {}
+  const nodeLog = (msg) => {
+    try { fs.appendFileSync(logPath, `[${new Date().toISOString()}] [node] ${msg}\n`); } catch (_) {}
+  };
+
+  // 让 PowerShell 也能写到同一份日志。转义 Windows 反斜杠给 PS 单引号字符串。
+  const psLogPathQuoted = logPath.replace(/'/g, "''");
+
   const psScript = `
-$sig = @'
-[DllImport("kernel32", SetLastError=true)] public static extern bool FreeConsole();
-[DllImport("kernel32", SetLastError=true)] public static extern bool AttachConsole(uint pid);
+$LogPath = '${psLogPathQuoted}'
+function Write-Log($msg) {
+    try { Add-Content -Path $LogPath -Value ("[" + (Get-Date).ToString("o") + "] [ps]  " + $msg) } catch {}
+}
+try {
+    $sig = @'
 [DllImport("kernel32")] public static extern System.IntPtr GetConsoleWindow();
 [DllImport("kernel32")] public static extern uint GetConsoleProcessList(uint[] p, uint c);
 [DllImport("user32")] public static extern bool ShowWindow(System.IntPtr h, int c);
 '@
-Add-Type -MemberDefinition $sig -Name W -Namespace N -ErrorAction SilentlyContinue
-[void][N.W]::FreeConsole()
-if ([N.W]::AttachConsole(${parentPid})) {
-    $buf = New-Object uint32[] 8
-    $count = [N.W]::GetConsoleProcessList($buf, 8)
-    if ($count -le 2) {
-        [void][N.W]::ShowWindow([N.W]::GetConsoleWindow(), 7)
+    Add-Type -MemberDefinition $sig -Name W -Namespace N -ErrorAction Stop
+    $buf = New-Object uint32[] 16
+    $count = [N.W]::GetConsoleProcessList($buf, 16)
+    $hwnd = [N.W]::GetConsoleWindow()
+    Write-Log "count=$count hwnd=$hwnd threshold=<=2"
+    if ($count -gt 0 -and $count -le 2 -and $hwnd -ne [System.IntPtr]::Zero) {
+        $ret = [N.W]::ShowWindow($hwnd, 7)
+        Write-Log "ShowWindow(hwnd, SW_SHOWMINNOACTIVE) returned $ret -> MINIMIZED"
+    } else {
+        Write-Log "SKIPPED (running from terminal, or hwnd is 0)"
     }
-    [void][N.W]::FreeConsole()
+} catch {
+    Write-Log ("EXCEPTION: " + $_.ToString())
 }
 `.trim();
+
   const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
+  nodeLog(`spawning powershell (pid=${process.pid})`);
   try {
+    // 关键：不传 windowsHide、不传 detached，让 PS 继承本进程的控制台
     const child = require('child_process').spawn('powershell.exe', [
-      '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-EncodedCommand', encoded,
-    ], { stdio: 'ignore', windowsHide: true, detached: true });
-    child.unref();
-    child.on('error', () => { /* 忽略 —— PowerShell 缺失时不要影响启动 */ });
-  } catch (_) { /* ignore */ }
+      '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded,
+    ], { stdio: 'ignore' });
+    child.on('error', (err) => nodeLog(`spawn error: ${err && err.message}`));
+    child.on('exit', (code) => nodeLog(`powershell exited code=${code}`));
+  } catch (err) {
+    nodeLog(`spawn threw: ${err && err.message}`);
+  }
 }
 
 async function main() {
