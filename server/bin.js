@@ -61,16 +61,25 @@ function Write-Log($msg) {
 try {
     $sig = @'
 [DllImport("kernel32")] public static extern System.IntPtr GetConsoleWindow();
-[DllImport("kernel32")] public static extern uint GetConsoleProcessList(uint[] p, uint c);
 [DllImport("user32")] public static extern bool ShowWindow(System.IntPtr h, int c);
 '@
     Add-Type -MemberDefinition $sig -Name W -Namespace N -ErrorAction Stop
-    $buf = New-Object uint32[] 16
-    $count = [N.W]::GetConsoleProcessList($buf, 16)
+
+    # 检测是否从双击启动：node 的父进程是 explorer.exe
+    $nodeProc = Get-Process -Id ${nodePid} -ErrorAction Stop
+    $parentId = (Get-CimInstance Win32_Process -Filter "ProcessId = ${nodePid}" -ErrorAction Stop).ParentProcessId
+    $parentName = (Get-Process -Id $parentId -ErrorAction SilentlyContinue).ProcessName
+    Write-Log "node parent: pid=$parentId name=$parentName"
+
+    if ($parentName -ne 'explorer') {
+        Write-Log "SKIPPED (not launched by double-click, parent is $parentName)"
+        exit
+    }
+
     $hwnd = [N.W]::GetConsoleWindow()
-    Write-Log "count=$count hwnd=$hwnd"
-    if ($count -le 0 -or $count -gt 2 -or $hwnd -eq [System.IntPtr]::Zero) {
-        Write-Log "SKIPPED (running from terminal or hwnd is 0)"
+    Write-Log "hwnd=$hwnd"
+    if ($hwnd -eq [System.IntPtr]::Zero) {
+        Write-Log "SKIPPED (hwnd is 0)"
         exit
     }
 
@@ -138,12 +147,15 @@ try {
   const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
   nodeLog(`spawning tray powershell (pid=${process.pid})`);
   try {
+    // 关键：不传 detached，让 PS 继承父进程的控制台，这样 GetConsoleWindow() 能拿到正确的 HWND。
+    // windowsHide 也不传，否则 PS 会分配一个新的隐藏控制台。
+    // stdio 'ignore' 屏蔽 PS 的 stdin/stdout/stderr，不干扰父进程。
     const child = require('child_process').spawn('powershell.exe', [
       '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden',
       '-EncodedCommand', encoded,
-    ], { stdio: 'ignore', detached: true, windowsHide: true });
-    child.unref();
+    ], { stdio: 'ignore' });
     child.on('error', (err) => nodeLog(`spawn error: ${err && err.message}`));
+    child.on('exit', (code) => nodeLog(`powershell exited code=${code}`));
   } catch (err) {
     nodeLog(`spawn threw: ${err && err.message}`);
   }
