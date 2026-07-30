@@ -1,5 +1,12 @@
+/*
+ * HTML 的 hidden 属性默认会加 display:none，但下面 .dropzone / .devices-panel
+ * 等元素本身写了 display: flex，class 选择器会覆盖 [hidden]，导致带 hidden
+ * 的元素依然可见。用 !important 强制修正这个常见坑。
+ */
+[hidden] { display: none !important; }
+
 :root {
-  --bg: #f5f7fb;
+  --bg: #ffffff;
   --card: #ffffff;
   --border: #e5e7eb;
   --text: #1f2937;
@@ -96,10 +103,12 @@ body { display: flex; flex-direction: column; }
   padding: 8px 12px;
   border-radius: var(--radius);
   background: var(--card);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   word-break: break-word;
   animation: pop 0.18s ease-out;
 }
+.msg.self { border-color: transparent; }
 @keyframes pop {
   from { transform: translateY(6px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -135,14 +144,22 @@ body { display: flex; flex-direction: column; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .msg.file .fsize { font-size: 11px; opacity: 0.7; margin-top: 2px; }
-.msg.file .actions { display: flex; gap: 6px; margin-top: 6px; }
-.msg.file .actions a, .msg.file .actions button {
-  display: inline-block; padding: 5px 12px; font-size: 12px;
+/* 消息底部的操作按钮行（复制/下载/删除，文字消息和文件消息共用） */
+.msg .actions { display: flex; gap: 6px; margin-top: 6px; opacity: 0.55; transition: opacity 0.15s; }
+.msg:hover .actions { opacity: 1; }
+.msg .actions a, .msg .actions button {
+  display: inline-block; padding: 4px 10px; font-size: 11px;
   background: rgba(255,255,255,0.9); color: var(--primary);
   border-radius: 8px; text-decoration: none; border: none; cursor: pointer;
+  font-family: inherit; line-height: 1.3;
 }
-.msg.self.file .actions a, .msg.self.file .actions button {
+.msg .actions a:hover, .msg .actions button:hover { background: #fff; }
+.msg .actions button:disabled { opacity: 0.7; cursor: default; }
+.msg.self .actions a, .msg.self .actions button {
   background: rgba(255,255,255,0.22); color: #fff;
+}
+.msg.self .actions a:hover, .msg.self .actions button:hover {
+  background: rgba(255,255,255,0.35);
 }
 
 /* ----- 底部输入 ----- */
