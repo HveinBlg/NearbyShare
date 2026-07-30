@@ -6,7 +6,7 @@
 [hidden] { display: none !important; }
 
 :root {
-  --bg: #f5f7fb;
+  --bg: #ffffff;
   --card: #ffffff;
   --border: #e5e7eb;
   --text: #1f2937;
@@ -103,10 +103,12 @@ body { display: flex; flex-direction: column; }
   padding: 8px 12px;
   border-radius: var(--radius);
   background: var(--card);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   word-break: break-word;
   animation: pop 0.18s ease-out;
 }
+.msg.self { border-color: transparent; }
 @keyframes pop {
   from { transform: translateY(6px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
