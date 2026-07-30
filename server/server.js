@@ -176,10 +176,17 @@ async function route(req, res, ctx) {
     return handleDownload(req, res, ctx, p, parsed.query);
   }
 
-  // 删除
+  // 删除文件
   if (method === 'DELETE' && p.startsWith('/api/files/')) {
     const id = p.split('/').pop();
     const ok = ctx.store.removeFile(id);
+    return sendJson(res, ok ? 200 : 404, { ok });
+  }
+
+  // 删除文字消息
+  if (method === 'DELETE' && p.startsWith('/api/messages/')) {
+    const id = p.split('/').pop();
+    const ok = ctx.store.removeMessage(id);
     return sendJson(res, ok ? 200 : 404, { ok });
   }
 

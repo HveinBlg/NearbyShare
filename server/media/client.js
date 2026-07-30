@@ -87,6 +87,7 @@ function renderMessage(m, opts = {}) {
     // 将 URL 转成可点链接（简单处理）
     t.append(...linkify(m.text));
     el.append(t);
+    el.append(renderTextActions(m, isSelf));
   } else if (m.kind === 'file') {
     el.append(renderFile(m, isSelf));
   }
@@ -96,6 +97,54 @@ function renderMessage(m, opts = {}) {
     const stickToBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 200;
     if (stickToBottom || isSelf) scrollBottom();
   }
+}
+
+function renderTextActions(m, isSelf) {
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.textContent = '复制';
+  copyBtn.addEventListener('click', async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(m.text);
+      } else {
+        // 老浏览器兜底：临时 textarea + execCommand
+        const ta = document.createElement('textarea');
+        ta.value = m.text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.append(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      const original = copyBtn.textContent;
+      copyBtn.textContent = '已复制 ✓';
+      copyBtn.disabled = true;
+      setTimeout(() => { copyBtn.textContent = original; copyBtn.disabled = false; }, 1500);
+    } catch (_) {
+      copyBtn.textContent = '复制失败';
+      setTimeout(() => { copyBtn.textContent = '复制'; }, 1500);
+    }
+  });
+  actions.append(copyBtn);
+
+  if (isSelf) {
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.textContent = '删除';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('删除这条消息？')) return;
+      try {
+        const res = await fetch(`/api/messages/${m.id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+      } catch (err) {
+        alert('删除失败：' + err.message);
+      }
+    });
+    actions.append(delBtn);
+  }
+  return actions;
 }
 
 function renderFile(f, isSelf) {
@@ -253,7 +302,7 @@ function connectSSE() {
     if (evt.type === 'message' || evt.type === 'file-added') {
       renderMessage(evt.payload);
       if (evt.payload.senderId !== me.id) beep();
-    } else if (evt.type === 'file-removed') {
+    } else if (evt.type === 'file-removed' || evt.type === 'message-removed') {
       removeItem(evt.payload.id);
     } else if (evt.type === 'devices') {
       renderDevices(evt.payload);
