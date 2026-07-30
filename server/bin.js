@@ -31,27 +31,16 @@ function usage() {
 }
 
 /**
- * 在 Windows 上双击启动 exe 时把控制台窗口最小化到任务栏。
+ * 在 Windows 上双击启动 exe 时把控制台窗口隐藏到系统托盘（右下角通知区域）。
  *
- * 前几版的坑：
- *   - PR #11: spawn PowerShell 时用 `detached:true + windowsHide:true`，
- *     导致 PowerShell 拿到的是自己那个（没有的）控制台，ShowWindow 无效
- *   - PR #15: 加了 AttachConsole 补救，但 spawn 选项没改；某些 Windows
- *     配置下 CREATE_NO_WINDOW 会阻止 AttachConsole，依旧失败
+ * 方案：用 PowerShell 的 WinForms 创建一个 NotifyIcon（系统托盘图标），
+ * 同时用 ShowWindow(hwnd, SW_HIDE) 完全隐藏控制台窗口（不在任务栏中显示）。
+ * 托盘图标右键菜单提供"显示窗口"和"退出"选项。
  *
- * 本版方案：让 PowerShell **继承**父进程（我们）的可见控制台。
- *   - spawn 时不传 windowsHide 也不传 detached
- *   - stdio 'ignore' 屏蔽 PS 的 stdin/stdout/stderr，不影响父控制台显示
- *   - PS 内 GetConsoleWindow() 直接返回父控制台 HWND（因为继承）
- *   - GetConsoleProcessList 返回：[父 node, 本 powershell] = 2（双击场景）
- *     或 [用户 shell, 父 node, 本 powershell] >= 3（从终端启动）
- *   - `-le 2` 时才 ShowWindow，避免把用户终端也压下去
- *
- * 加了文件日志到 `~/.nearby-share/minimize.log`，方便用户在最小化不生效
- * 时贴给我看。日志记录：spawn 是否失败、count、hwnd、ShowWindow 返回值、
- * 异常信息。写不了日志文件不影响正常运行。
+ * 仅在双击启动场景（GetConsoleProcessList <= 2）才执行，
+ * 从终端启动时不隐藏窗口。
  */
-function tryMinimizeConsoleOnWindows() {
+function tryMinimizeToTray() {
   if (process.platform !== 'win32') return;
 
   const logDir = path.join(os.homedir(), '.nearby-share');
@@ -61,8 +50,8 @@ function tryMinimizeConsoleOnWindows() {
     try { fs.appendFileSync(logPath, `[${new Date().toISOString()}] [node] ${msg}\n`); } catch (_) {}
   };
 
-  // 让 PowerShell 也能写到同一份日志。转义 Windows 反斜杠给 PS 单引号字符串。
   const psLogPathQuoted = logPath.replace(/'/g, "''");
+  const nodePid = process.pid;
 
   const psScript = `
 $LogPath = '${psLogPathQuoted}'
@@ -79,27 +68,82 @@ try {
     $buf = New-Object uint32[] 16
     $count = [N.W]::GetConsoleProcessList($buf, 16)
     $hwnd = [N.W]::GetConsoleWindow()
-    Write-Log "count=$count hwnd=$hwnd threshold=<=2"
-    if ($count -gt 0 -and $count -le 2 -and $hwnd -ne [System.IntPtr]::Zero) {
-        $ret = [N.W]::ShowWindow($hwnd, 7)
-        Write-Log "ShowWindow(hwnd, SW_SHOWMINNOACTIVE) returned $ret -> MINIMIZED"
-    } else {
-        Write-Log "SKIPPED (running from terminal, or hwnd is 0)"
+    Write-Log "count=$count hwnd=$hwnd"
+    if ($count -le 0 -or $count -gt 2 -or $hwnd -eq [System.IntPtr]::Zero) {
+        Write-Log "SKIPPED (running from terminal or hwnd is 0)"
+        exit
     }
+
+    # 隐藏控制台窗口（SW_HIDE = 0），完全不在任务栏显示
+    [N.W]::ShowWindow($hwnd, 0) | Out-Null
+    Write-Log "ShowWindow(hwnd, SW_HIDE) done -> hidden from taskbar"
+
+    # 创建系统托盘图标
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $nodePid = ${nodePid}
+    $contextMenu = New-Object System.Windows.Forms.ContextMenuStrip
+    $showItem = $contextMenu.Items.Add("显示窗口")
+    $exitItem = $contextMenu.Items.Add("退出 NearbyShare")
+
+    $notifyIcon = New-Object System.Windows.Forms.NotifyIcon
+    $notifyIcon.Icon = [System.Drawing.SystemIcons]::Application
+    $notifyIcon.Text = "NearbyShare 运行中"
+    $notifyIcon.ContextMenuStrip = $contextMenu
+    $notifyIcon.Visible = $true
+
+    # 双击托盘图标 -> 显示窗口
+    $notifyIcon.Add_DoubleClick({
+        [N.W]::ShowWindow($hwnd, 5) | Out-Null  # SW_SHOW
+        Write-Log "Tray double-click -> ShowWindow"
+    })
+
+    # 菜单：显示窗口
+    $showItem.Add_Click({
+        [N.W]::ShowWindow($hwnd, 5) | Out-Null  # SW_SHOW
+        Write-Log "Menu show -> ShowWindow"
+    })
+
+    # 菜单：退出
+    $exitItem.Add_Click({
+        Write-Log "Menu exit -> killing node pid $nodePid"
+        $notifyIcon.Visible = $false
+        try { Stop-Process -Id $nodePid -Force } catch {}
+        [System.Windows.Forms.Application]::Exit()
+    })
+
+    Write-Log "Tray icon created, entering message loop"
+
+    # 监控 node 进程，退出时清理托盘图标
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = 2000
+    $timer.Add_Tick({
+        try {
+            $p = Get-Process -Id $nodePid -ErrorAction Stop
+        } catch {
+            Write-Log "Node process gone, cleaning up tray"
+            $notifyIcon.Visible = $false
+            [System.Windows.Forms.Application]::Exit()
+        }
+    })
+    $timer.Start()
+
+    [System.Windows.Forms.Application]::Run()
 } catch {
     Write-Log ("EXCEPTION: " + $_.ToString())
 }
 `.trim();
 
   const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
-  nodeLog(`spawning powershell (pid=${process.pid})`);
+  nodeLog(`spawning tray powershell (pid=${process.pid})`);
   try {
-    // 关键：不传 windowsHide、不传 detached，让 PS 继承本进程的控制台
     const child = require('child_process').spawn('powershell.exe', [
-      '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded,
-    ], { stdio: 'ignore' });
+      '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden',
+      '-EncodedCommand', encoded,
+    ], { stdio: 'ignore', detached: true, windowsHide: true });
+    child.unref();
     child.on('error', (err) => nodeLog(`spawn error: ${err && err.message}`));
-    child.on('exit', (code) => nodeLog(`powershell exited code=${code}`));
   } catch (err) {
     nodeLog(`spawn threw: ${err && err.message}`);
   }
@@ -133,10 +177,10 @@ async function main() {
   const urls = getLanUrls(handle.port);
   banner(urls, handle.port);
 
-  // 双击 exe 启动时自动最小化控制台窗口。从命令行 / --visible 时不动。
+  // 双击 exe 启动时自动隐藏到系统托盘。从命令行 / --visible 时不动。
   if (!opts.visible) {
-    // 稍等一下让 banner 有机会绘制完再最小化，避免出现"窗口刚闪一下"的观感
-    setTimeout(tryMinimizeConsoleOnWindows, 300);
+    // 稍等一下让 banner 有机会绘制完再隐藏
+    setTimeout(tryMinimizeToTray, 300);
   }
 
   // 平滑退出
@@ -150,30 +194,17 @@ async function main() {
 }
 
 function banner(urls, port) {
-  const bar = '═'.repeat(52);
-  console.log(`\n╔${bar}╗`);
-  console.log(`║  NearbyShare 已启动 ${' '.repeat(32)}║`);
-  console.log(`╠${bar}╣`);
-  console.log(`║  其它设备浏览器打开以下任一地址：${' '.repeat(15)}║`);
+  console.log('\n  NearbyShare 已启动\n');
+  console.log('  其它设备浏览器打开以下任一地址：');
   if (urls.length === 0) {
-    console.log(`║    (未检测到局域网 IPv4，请检查网络) ${' '.repeat(12)}║`);
+    console.log('    (未检测到局域网 IPv4，请检查网络)');
   } else {
     for (const { iface, url } of urls) {
-      const line = `║    ${url}   [${iface}]`;
-      console.log(line + ' '.repeat(Math.max(0, 55 - visibleLen(line))) + '║');
+      console.log(`    ${url}    [${iface}]`);
     }
   }
-  const local = `║    http://localhost:${port}   [本机]`;
-  console.log(local + ' '.repeat(Math.max(0, 55 - visibleLen(local))) + '║');
-  console.log(`╚${bar}╝`);
-  console.log(`\n按 Ctrl+C 退出。\n`);
-}
-
-function visibleLen(s) {
-  // 简单近似：中文按 2 宽，其余按 1
-  let n = 0;
-  for (const ch of s) n += /[\u4e00-\u9fff]|[\uff00-\uffef]/.test(ch) ? 2 : 1;
-  return n;
+  console.log(`    http://localhost:${port}    [本机]`);
+  console.log('\n  按 Ctrl+C 退出。\n');
 }
 
 main().catch((err) => {
