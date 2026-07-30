@@ -206,7 +206,13 @@ button, a, .lan-url, .msg { touch-action: manipulation; }
   padding: 9px 14px; font-size: 15px;
   resize: none; font-family: inherit; line-height: 1.4;
   max-height: 120px; background: var(--bg); color: var(--text); outline: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* 彻底隐藏滚动条（滚动功能保留，条不可见） */
+  scrollbar-width: none;           /* Firefox */
+  -ms-overflow-style: none;        /* IE/Edge legacy */
 }
+.composer textarea::-webkit-scrollbar { display: none; } /* Chrome/Edge/Safari */
 .composer textarea:focus { border-color: var(--primary); }
 .icon-btn {
   border: none; background: var(--bg); color: var(--text);
