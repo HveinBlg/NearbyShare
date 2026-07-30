@@ -88,6 +88,14 @@ function createStore({ uploadDir, historyLimit = 200 }) {
       return true;
     },
 
+    removeMessage(id) {
+      const idx = messages.findIndex((m) => m.id === id);
+      if (idx < 0) return false;
+      const [m] = messages.splice(idx, 1);
+      broadcast('message-removed', { id: m.id });
+      return true;
+    },
+
     clearAll() {
       messages.length = 0;
       for (const f of files) fs.unlink(f.path, () => {});
