@@ -2,6 +2,11 @@
 /**
  * 将 server/ 打包为单个 dist/nearby-share-bundled.js 文件（内联 media 静态资源）。
  * 供 SEA 打包 / 分发使用。零依赖。
+ *
+ * 重要：所有源文件的换行符必须归一化为 LF 才能做下面的多行字符串替换。
+ * 否则在 Windows GitHub Actions runner 上（默认 core.autocrlf=true）源文件
+ * 会带 CRLF，字符串替换会静默失败，导致内联静态资源逻辑没被注入，
+ * 最终产出的 exe 上 /、/client.js 等所有静态路径返 404。参见 issue 复盘。
  */
 'use strict';
 const fs = require('fs');
@@ -13,6 +18,11 @@ const OUT_FILE = path.join(OUT_DIR, 'nearby-share-bundled.js');
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
+// 归一化行尾。所有读入源文件都过这里。
+function readSource(p) {
+  return fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
+}
+
 // 内联静态资源
 const mediaDir = path.join(ROOT, 'server', 'media');
 const mediaMap = {};
@@ -22,10 +32,10 @@ for (const name of fs.readdirSync(mediaDir)) {
   console.log(`  inline ${name} (${buf.length} bytes)`);
 }
 
-// 读取 server 源码
-const store = fs.readFileSync(path.join(ROOT, 'server', 'store.js'), 'utf8');
-const server = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-const bin = fs.readFileSync(path.join(ROOT, 'server', 'bin.js'), 'utf8');
+// 读取 server 源码（换行已归一化为 LF）
+const store = readSource(path.join(ROOT, 'server', 'store.js'));
+const server = readSource(path.join(ROOT, 'server', 'server.js'));
+const bin = readSource(path.join(ROOT, 'server', 'bin.js'));
 
 // 简单地把三个 CommonJS 模块串起来
 function mod(code) {
@@ -34,6 +44,39 @@ function mod(code) {
     .replace(/^#!.*$/m, '')
     .replace(/^'use strict';?/m, '');
 }
+
+// 断言式替换：若 needle 没找到，抛错让 CI 立即失败，避免静默产出坏 bundle。
+function requireReplace(code, needle, replacement, label) {
+  if (!code.includes(needle)) {
+    throw new Error(
+      `[bundle] Failed to locate expected pattern "${label}" in server.js. ` +
+      `The generated bundle would be broken (static file serving would 404). ` +
+      `Check that server.js still contains the string:\n${needle}`
+    );
+  }
+  return code.split(needle).join(replacement);
+}
+
+const MEDIA_DIR_NEEDLE = "const MEDIA_DIR = path.join(__dirname, 'media');";
+const MEDIA_DIR_REPLACEMENT = "const MEDIA_DIR = '__inline__';";
+
+const SERVE_STATIC_NEEDLE =
+  "function serveStatic(res, filePath) {\n" +
+  "  fs.readFile(filePath, (err, data) => {";
+const SERVE_STATIC_REPLACEMENT =
+  "function serveStatic(res, filePath) {\n" +
+  "  const key = path.basename(filePath);\n" +
+  "  const inline = __MEDIA__ && __MEDIA__[key];\n" +
+  "  if (inline) {\n" +
+  "    const buf = Buffer.from(inline, 'base64');\n" +
+  "    res.writeHead(200, { 'Content-Type': mimeFromName(filePath), 'Cache-Control': 'no-cache' });\n" +
+  "    return res.end(buf);\n" +
+  "  }\n" +
+  "  fs.readFile(filePath, (err, data) => {";
+
+let serverModCode = mod(server);
+serverModCode = requireReplace(serverModCode, MEDIA_DIR_NEEDLE, MEDIA_DIR_REPLACEMENT, 'MEDIA_DIR');
+serverModCode = requireReplace(serverModCode, SERVE_STATIC_NEEDLE, SERVE_STATIC_REPLACEMENT, 'serveStatic');
 
 const bundled = `#!/usr/bin/env node
 'use strict';
@@ -67,13 +110,7 @@ ${mod(store)}
 
 // -------- server.js（改写为从内联资源读取 media） --------
 __define('server', function (module, exports, require) {
-${mod(server).replace(
-  "const MEDIA_DIR = path.join(__dirname, 'media');",
-  "const MEDIA_DIR = '__inline__';",
-).replace(
-  "function serveStatic(res, filePath) {\n  fs.readFile(filePath, (err, data) => {",
-  "function serveStatic(res, filePath) {\n  const key = path.basename(filePath);\n  const inline = __MEDIA__ && __MEDIA__[key];\n  if (inline) {\n    const buf = Buffer.from(inline, 'base64');\n    res.writeHead(200, { 'Content-Type': mimeFromName(filePath), 'Cache-Control': 'no-cache' });\n    return res.end(buf);\n  }\n  fs.readFile(filePath, (err, data) => {",
-)}
+${serverModCode}
 });
 
 // -------- bin.js（改写 require 路径） --------
