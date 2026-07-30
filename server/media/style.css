@@ -33,14 +33,44 @@
 
 * { box-sizing: border-box; }
 html, body {
-  margin: 0; padding: 0; height: 100%;
+  margin: 0; padding: 0;
+  height: 100%;
+  /* dvh 是"动态视口高度"，会随手机地址栏 / 虚拟键盘弹出自动调整。
+     iOS 15.4+ / Chrome 108+ 支持。旧浏览器回退到 100%。 */
+  height: 100dvh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB",
+    "Noto Sans SC", sans-serif;
   background: var(--bg); color: var(--text);
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;    /* 旋转屏幕时不放大字号（iOS Safari）*/
+  text-size-adjust: 100%;
   overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 body { display: flex; flex-direction: column; }
+
+/* 触摸按钮不出现 300ms 点击延迟 */
+button, a, .lan-url, .msg { touch-action: manipulation; }
+
+/* ----- 自定义滚动条：隐藏难看的上下箭头，条本身也更细更淡 ----- */
+* {
+  scrollbar-width: thin;                          /* Firefox */
+  scrollbar-color: rgba(107, 114, 128, 0.4) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.35);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(107, 114, 128, 0.6); background-clip: padding-box; }
+/* 关键：隐藏 Chrome/Edge 老版本上下箭头按钮 */
+*::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+*::-webkit-scrollbar-corner { background: transparent; }
 
 /* ----- 顶栏 ----- */
 .top {

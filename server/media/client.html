@@ -2,10 +2,21 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- interactive-widget=resizes-content 让键盘弹出时视口跟着缩，
+       避免 iOS Safari 输入框被键盘挡住 -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#2563eb">
+  <!-- 阻止手机浏览器把长数字自动识别为电话号码（会把 IP 变成链接） -->
+  <meta name="format-detection" content="telephone=no, address=no, email=no">
+  <!-- iOS / Android"添加到主屏幕"友好化 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NearbyShare">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>NearbyShare · 局域网互传</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
