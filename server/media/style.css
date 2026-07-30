@@ -1,3 +1,11 @@
+/*
+ * HTML 的 hidden 属性默认会加 display:none，但下面 .dropzone / .devices-panel
+ * 等元素本身写了 display: flex，正常特异性下 class 选择器会覆盖 [hidden]，
+ * 导致带 hidden 的元素依然可见。用 !important 强制修正这个常见坑，避免
+ * 每个可能被 hidden 的元素都单独配一条 [hidden] 规则。
+ */
+[hidden] { display: none !important; }
+
 :root {
   --bg: #f5f7fb;
   --card: #ffffff;
