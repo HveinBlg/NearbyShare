@@ -1,0 +1,20 @@
+# 强制文本文件在所有平台上使用 LF 换行。
+# 否则在 Windows GitHub Actions runner（默认 core.autocrlf=true）checkout 时
+# 会把 LF 转成 CRLF，导致 scripts/bundle.js 中的多行字符串替换失败，
+# 最终产出的 Windows exe 上所有静态路径（/、/client.js、...）返回 404。
+* text=auto eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.svg text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# 已知的二进制类型：不要碰。
+*.png binary
+*.ico binary
+*.icns binary
+*.gz binary
+*.zip binary
