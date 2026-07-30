@@ -240,6 +240,80 @@ body { display: flex; flex-direction: column; }
 }
 .viewer img { max-width: 96%; max-height: 96%; cursor: default; }
 
+/* ----- 自定义确认弹窗 ----- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: modalFadeIn 0.15s ease-out;
+}
+.modal-overlay.closing { animation: modalFadeOut 0.18s ease-in forwards; }
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-width: 280px; max-width: 400px; width: 100%;
+  padding: 22px 20px 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  animation: modalSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalSlideIn {
+  from { transform: translateY(12px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.modal-title {
+  font-size: 16px; font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.modal-message {
+  font-size: 14px; line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 20px;
+  word-break: break-word;
+}
+.modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.modal-btn {
+  padding: 8px 18px; border-radius: 8px;
+  font-size: 14px; font-family: inherit; font-weight: 500;
+  border: 1px solid transparent; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+  min-width: 72px;
+}
+.modal-btn:active { transform: translateY(1px); }
+.modal-btn.cancel {
+  background: transparent; color: var(--text);
+  border-color: var(--border);
+}
+.modal-btn.cancel:hover { background: var(--bg); border-color: var(--muted); }
+.modal-btn.primary {
+  background: var(--primary); color: #fff;
+}
+.modal-btn.primary:hover { background: var(--primary-dark); }
+.modal-btn.danger {
+  background: #ef4444; color: #fff;
+}
+.modal-btn.danger:hover { background: #dc2626; }
+.modal-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+.modal-btn.danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+@media (max-width: 480px) {
+  .modal { padding: 18px 16px 14px; border-radius: 12px; }
+  .modal-btn { padding: 9px 16px; }
+}
+
 /* 手机适配 */
 @media (max-width: 480px) {
   .msg { max-width: 88%; }
