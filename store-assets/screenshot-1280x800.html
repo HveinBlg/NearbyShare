@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>NearbyShare Screenshot 1280x800</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1280px; height: 800px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #3b82f6 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+.container {
+  display: flex; align-items: center; gap: 60px;
+  padding: 0 80px;
+}
+.left {
+  flex: 1;
+}
+.left h1 {
+  font-size: 42px; font-weight: 700; margin-bottom: 16px;
+  line-height: 1.2;
+}
+.left p {
+  font-size: 20px; opacity: 0.9; line-height: 1.6; margin-bottom: 30px;
+}
+.features {
+  display: flex; flex-wrap: wrap; gap: 12px;
+}
+.tag {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 14px; font-weight: 500;
+}
+.right {
+  flex-shrink: 0;
+  position: relative;
+}
+.phone {
+  width: 220px; height: 440px;
+  background: #1f2937;
+  border-radius: 30px;
+  border: 3px solid #374151;
+  padding: 40px 12px 20px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column;
+}
+.phone-header {
+  text-align: center; font-size: 11px; opacity: 0.7; margin-bottom: 10px;
+}
+.phone-content {
+  flex: 1; background: #111827; border-radius: 12px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px; overflow: hidden;
+}
+.msg-in {
+  background: #374151; padding: 8px 12px; border-radius: 12px 12px 12px 4px;
+  font-size: 12px; max-width: 80%; line-height: 1.4;
+}
+.msg-out {
+  background: #2563eb; padding: 8px 12px; border-radius: 12px 12px 4px 12px;
+  font-size: 12px; max-width: 80%; align-self: flex-end; line-height: 1.4;
+}
+.msg-file {
+  background: #374151; padding: 8px 12px; border-radius: 12px;
+  font-size: 11px; display: flex; align-items: center; gap: 8px;
+}
+.msg-file .icon { font-size: 20px; }
+.pc {
+  position: absolute; top: -30px; right: -80px;
+  width: 280px; height: 180px;
+  background: #1f2937;
+  border-radius: 10px;
+  border: 2px solid #374151;
+  padding: 24px 16px 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  transform: rotate(3deg);
+}
+.pc::after {
+  content: '';
+  position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 16px; background: #374151; border-radius: 0 0 8px 8px;
+}
+.pc-header {
+  display: flex; gap: 4px; margin-bottom: 10px;
+}
+.pc-dot { width: 6px; height: 6px; border-radius: 50%; }
+.pc-dot.r { background: #ef4444; }
+.pc-dot.y { background: #eab308; }
+.pc-dot.g { background: #22c55e; }
+.pc-content {
+  background: #111827; border-radius: 6px; padding: 10px; height: calc(100% - 20px);
+  font-size: 10px; line-height: 1.5; color: #94a3b8;
+}
+.arrow {
+  position: absolute; top: 50%; left: -30px;
+  font-size: 40px; opacity: 0.6;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: translateX(0); }
+  50% { opacity: 0.8; transform: translateX(-5px); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left">
+    <h1>NearbyShare<br>局域网互传</h1>
+    <p>手机浏览器打开即用，零安装零云端<br>文字、图片、文件实时同步传输</p>
+    <div class="features">
+      <div class="tag">手机零安装</div>
+      <div class="tag">原画质传输</div>
+      <div class="tag">跨平台</div>
+      <div class="tag">完全免费</div>
+      <div class="tag">开源</div>
+      <div class="tag">数据不出局域网</div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="phone">
+      <div class="phone-header">192.168.1.100:3000</div>
+      <div class="phone-content">
+        <div class="msg-in">你好，帮我把这个文件传过来</div>
+        <div class="msg-out">好的，马上发</div>
+        <div class="msg-file"><span class="icon">📄</span><span>项目方案.pdf (2.3 MB)</span></div>
+        <div class="msg-out">收到 ✓</div>
+        <div class="msg-in">传几张照片给我</div>
+        <div class="msg-file"><span class="icon">🖼</span><span>IMG_2026.jpg (4.1 MB)</span></div>
+      </div>
+    </div>
+    <div class="pc">
+      <div class="pc-header">
+        <div class="pc-dot r"></div>
+        <div class="pc-dot y"></div>
+        <div class="pc-dot g"></div>
+      </div>
+      <div class="pc-content">
+        NearbyShare 已启动<br><br>
+        其它设备浏览器打开：<br>
+        http://192.168.1.100:3000<br><br>
+        已连接设备: 2
+      </div>
+    </div>
+    <div class="arrow">⇄</div>
+  </div>
+</div>
+</body>
+</html>
