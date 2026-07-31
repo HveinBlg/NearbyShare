@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>NearbyShare Promo 1400x560 EN</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1400px; height: 560px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #2563eb 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+.container {
+  display: flex; align-items: center; gap: 80px;
+  padding: 0 100px;
+  width: 100%;
+}
+.left { flex: 1; }
+.left h1 {
+  font-size: 48px; font-weight: 700; margin-bottom: 12px;
+  background: linear-gradient(90deg, #fff 0%, #93c5fd 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.left h2 {
+  font-size: 22px; font-weight: 400; opacity: 0.85; margin-bottom: 28px;
+}
+.features {
+  display: flex; gap: 24px;
+}
+.feature {
+  text-align: center;
+}
+.feature .num {
+  font-size: 36px; font-weight: 700; color: #60a5fa;
+}
+.feature .label {
+  font-size: 13px; opacity: 0.7; margin-top: 4px;
+}
+.right {
+  display: flex; align-items: center; gap: 30px;
+  flex-shrink: 0;
+}
+.device {
+  width: 160px; height: 320px;
+  background: #1f2937; border-radius: 24px; border: 2px solid #374151;
+  padding: 30px 10px 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column;
+}
+.device-content {
+  flex: 1; background: #111827; border-radius: 10px; padding: 10px;
+  display: flex; flex-direction: column; gap: 6px; font-size: 10px;
+}
+.d-msg { background: #374151; padding: 6px 8px; border-radius: 8px; }
+.d-msg.self { background: #2563eb; align-self: flex-end; }
+.transfer-arrow {
+  font-size: 48px; color: #60a5fa;
+  animation: flow 1.5s infinite;
+}
+@keyframes flow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.laptop {
+  width: 200px; height: 140px;
+  background: #1f2937; border-radius: 8px; border: 2px solid #374151;
+  padding: 16px 12px 10px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  position: relative;
+}
+.laptop::after {
+  content: '';
+  position: absolute; bottom: -12px; left: 20%; right: 20%;
+  height: 8px; background: #374151; border-radius: 0 0 6px 6px;
+}
+.laptop-content {
+  background: #111827; border-radius: 4px; height: 100%; padding: 8px;
+  font-size: 9px; color: #94a3b8; line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left">
+    <h1>NearbyShare</h1>
+    <h2>LAN Multi-Device Transfer · No App Needed on Phone</h2>
+    <div class="features">
+      <div class="feature"><div class="num">0</div><div class="label">Dependencies</div></div>
+      <div class="feature"><div class="num">0</div><div class="label">Cloud Data</div></div>
+      <div class="feature"><div class="num">0</div><div class="label">Phone Install</div></div>
+      <div class="feature"><div class="num">∞</div><div class="label">Quality</div></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="device">
+      <div class="device-content">
+        <div class="d-msg">File received ✓</div>
+        <div class="d-msg self">Sending photo...</div>
+        <div class="d-msg">IMG_001.jpg</div>
+        <div class="d-msg self">report.docx</div>
+      </div>
+    </div>
+    <div class="transfer-arrow">⇌</div>
+    <div class="laptop">
+      <div class="laptop-content">
+        NearbyShare started<br>
+        ─────────────<br>
+        http://192.168.1.5:3000<br>
+        Devices online: 2<br>
+        Transferred: 12 files
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
