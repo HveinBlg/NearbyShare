@@ -262,4 +262,11 @@ A: manifest V3 在 Firefox 已 GA，只是 API 略有差异。当前 manifest �
 
 ## License
 
-MIT
+本项目采用 **[PolyForm Noncommercial License 1.0.0](./LICENSE)**。
+
+- ✅ **个人、教育、科研、非营利组织**等**非商业用途**：免费使用、修改、分发
+- ❌ **商业用途**：不允许（包括但不限于：作为付费产品/服务的一部分、用于盈利的场景）
+
+如需**商业授权**（在企业内部署、集成到商业产品、提供商业服务等），请通过 [GitHub Issues](https://github.com/HveinBlg/NearbyShare/issues) 联系作者获取单独的商业许可。
+
+> 版权所有 © 2026 HveinBlg。保留所有权利。
